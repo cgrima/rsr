@@ -10,7 +10,7 @@ class Statfit:
 	"""Class holding statistical fit results
 	"""
 	def __init__(self, sample, func, kws, range, bins, values, params, chisqr,
-	             redchi):
+	             redchi, elapse):
 		self.sample = sample
 		self.func = func
 		self.kws = kws
@@ -20,6 +20,7 @@ class Statfit:
 		self.params = params
 		self.chisqr = chisqr
 		self.redchi = redchi
+		self.elapse = elapse
 		
 	def power(self, db=True):
 	    """coherent (pc) and incoherent (pn) components in power 
@@ -73,10 +74,18 @@ class Statfit:
 	    plt.xticks(size='17')
 	    
 	def report(self):
-	    buff = []
-	    add = buff.append
-	    p = self.params
-	    for i, key in enumerate(self.values.keys()):
-	        add("\t"+key +"\t= " + " %5.3f" % p[key].value +
-	            " +/- " + " %5.3f" % p[key].stderr)
-	    return '\n'.join(buff)
+		buff = []
+		add = buff.append
+		p = self.params
+		s = self.power()
+
+		add("[" + "%7.2f" % self.elapse + " s.]  ")
+		for i, key in enumerate(self.values.keys()):
+			add(key + " = " + "%5.3f" % p[key].value + " +/- " + "%5.3f" % p[key].stderr+", ")
+		add("crl = " + "%3.3f" % self.corrcoef())
+		add("\n-->  ")
+		for i, key in enumerate(s):
+			add(key + " = " + "%3.1f" % s[key] + ' dB, ')
+		add("")
+		out = "".join(buff)
+		print(out)

@@ -6,6 +6,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 
 import pdf
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 from scipy import optimize
@@ -38,6 +39,8 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, ftol=1e-4,
               range is 1
     """
     
+    start = time.time()
+
     if x is None: # Make the histogram
         y, edges = np.histogram(sample, bins=bins, range=range, density=density)
         x = edges[1:] - abs(edges[1]-edges[0])/2
@@ -55,5 +58,7 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, ftol=1e-4,
     
     yfit = pdf.hk(p.values, x) #fitted y-vector
     
+    elapse = time.time() - start
+
     return Statfit(sample, p.userfcn, p.kws, range, bins, p.values, p.params,
-		           p.chisqr, p.redchi)
+		           p.chisqr, p.redchi, elapse)
