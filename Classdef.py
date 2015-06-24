@@ -10,7 +10,7 @@ class Statfit:
 	"""Class holding statistical fit results
 	"""
 	def __init__(self, sample, func, kws, range, bins, values, params, chisqr,
-	             redchi, elapse):
+	             redchi, elapsed, message, flag):
 		self.sample = sample
 		self.func = func
 		self.kws = kws
@@ -20,22 +20,27 @@ class Statfit:
 		self.params = params
 		self.chisqr = chisqr
 		self.redchi = redchi
-		self.elapse = elapse
+		self.elapsed = elapsed
+		self.message = message
+		self.flag = flag
 		
+
 	def power(self, db=True):
 	    """coherent (pc) and incoherent (pn) components in power 
 	    """
-	    pc, pn = self.values['a']**2, 2*self.values['s']**2
+	    pt, pc, pn = np.average(self.sample)**2, self.values['a']**2, 2*self.values['s']**2
 	    if db is True:
-	        pc, pn = 10*np.log10(pc), 10*np.log10(pn)
-	    return {'pc':pc, 'pn':pn}
+	        pt, pc, pn = 10*np.log10(pt), 10*np.log10(pc), 10*np.log10(pn)
+	    return {'pt':pt, 'pc':pc, 'pn':pn}
 	    
+
 	def histogram(self, **kwargs):
 	    """Coordinates for the histogram
 	    """
 	    return np.histogram(self.sample, bins=self.bins, range=self.range,
 	                        density=True, **kwargs)
 	    
+
 	def yfunc(self, x=None, **kwargs):
 	    """coordinates for the theoretical fit
 	    Can change the x coordinates (initial by default)
@@ -45,6 +50,7 @@ class Statfit:
 	        x = edges[1:] - abs(edges[1]-edges[0])/2
 	    return self.func(self.values, x, **kwargs), x
 	    
+
 	def corrcoef(self, **kwargs):
 	    """Correlation coefficient between distribution and theoretical fit
 	    """
@@ -52,6 +58,7 @@ class Statfit:
 	    y, tmp = self.yfunc()
 	    return np.corrcoef(y, ydata)[0,1]
 	    
+
 	def plot(self, ylabel='Probability'):
 	    y, edges = self.histogram()
 	    width = edges[1]-edges[0]
@@ -73,19 +80,20 @@ class Statfit:
 	    plt.yticks(size='17')
 	    plt.xticks(size='17')
 	    
+
 	def report(self):
 		buff = []
 		add = buff.append
 		p = self.params
 		s = self.power()
 
-		add("[" + "%7.2f" % self.elapse + " s.]  ")
+		add("[" + "%7.2f" % self.elapsed + " s.]  " + self.message + " ["+str(self.flag)+"]")
+		add("\n")
 		for i, key in enumerate(self.values.keys()):
 			add(key + " = " + "%5.3f" % p[key].value + " +/- " + "%5.3f" % p[key].stderr+", ")
-		add("crl = " + "%3.3f" % self.corrcoef())
-		add("\n-->  ")
+		add("crl = " + "%3.3f" % self.corrcoef()+", ")
 		for i, key in enumerate(s):
 			add(key + " = " + "%3.1f" % s[key] + ' dB, ')
-		add("")
+		add("\n")
 		out = "".join(buff)
 		print(out)

@@ -4,7 +4,56 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import numpy as np
-import pdf
+import pdf, fit
+import time
+from pandas import DataFrame
+
+
+
+def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
+                 verbose=True, **kwargs):
+    """Histogram statistical estimation over windows sliding along a vector
+    vec = A vector of linear amplitude values
+    method to use to estimate the histogram statistics (shoulf be in .fit)
+    winsize = number of amplitude values within a window
+    sampling = window repeat rate
+    save = file name to save the results in (ascii file)
+    """
+    start = time.time()
+
+    x = np.arange(vec.size) #vector index
+    xa = x[:x.size-sampling/2.:sampling] #windows starting coordinate
+    xb = xa + winsize-1 #window end coordinate
+    if xb[-1] > x[-1]: xb[-1] = x[-1] #cut last window in limb
+    xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
+
+    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'mu', 'flag']
+    index = np.arange(xa.size)
+    table = DataFrame({'xa':xa, 'xb':xb, 'xo':xo},
+                      index=index, columns=columns) # Table to hold the results
+
+    for i, val in enumerate(xo): # Histogram estimation
+        if verbose is True:
+            print('ITER '+ str(i+1) + '/' + str(xa.size) +
+            ' (observations ' + str(xa[i]) + '-' + str(xb[i]) + ')')
+        sample = vec[xa[i]:xb[i]]
+        p = getattr(fit, method)(sample, **kwargs)
+        if verbose is True:
+            p.report()
+        table['pt'][i] = p.power()['pt']
+        table['pc'][i] = p.power()['pc']
+        table['pn'][i] = p.power()['pn']
+        table['crl'][i] = p.corrcoef()
+        table['mu'][i] = p.values['mu']
+        table['flag'][i] = p.flag
+
+    elapse = time.time() - start
+
+    if save is not None:
+        pass
+
+    return table
+
 
 
 def hk_pdf_sample(params, x):
