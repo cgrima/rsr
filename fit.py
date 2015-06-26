@@ -34,7 +34,7 @@ def hk_param0(sample, method='basic'):
 
 
 def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
-       range=(0,1), density=True, method='lbfgsb', **pdfkws):
+       range=(0,1), density=True, method='lbfgsb', **kws):
     """HK fit with lmfit.minimize
     
     Arguments
@@ -57,7 +57,7 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
         the bin, normalized such that the integral over the range is 1.
     fitmethod : string
         name of the optimization method
-    pdfkws : dict
+    kws : dict
         keywords to be passed to the HK function
     """
     start = time.time()
@@ -81,10 +81,10 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
     #     (Name,    Value,                 Vary,   Min,    Max,    Expr)
     p0.add('a',     param0['a0'],          True,   0,      1,      None)
     p0.add('s',     param0['s0'],          True,   0.001,  1,      None)
-    p0.add('mu',    param0['mu0'],         True,   None,   100,     None)
-    p0.add('pt',    np.average(sample)**2, None,   None,   None,   'a**2+2*s**2')
+    p0.add('mu',    param0['mu0'],         True,   0.1,    100,    None)
+    p0.add('pt',    np.average(sample)**2, None,   0,      1,      'a**2+2*s**2')
     
-    p = minimize(pdf.hk, p0, args=(x, y), kws=pdfkws, method=method) # Fit
+    p = minimize(pdf.hk, p0, args=(x, y), method=method, **kws) # Fit
     
     elapsed = time.time() - start
     

@@ -38,7 +38,7 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
     if xb[-1] > x[-1]: xb[-1] = x[-1] #cut last window in limb
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
-    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'mu', 'flag']
+    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'mu', 'success']
     index = np.arange(xa.size)
     table = DataFrame({'xa':xa, 'xb':xb, 'xo':xo},
                       index=index, columns=columns) # Table to hold the results
@@ -55,14 +55,15 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
         table['pt'][i] = p.power()['pt']
         table['pc'][i] = p.power()['pc']
         table['pn'][i] = p.power()['pn']
-        table['crl'][i] = p.corrcoef()
+        table['crl'][i] = p.crl()
         table['mu'][i] = p.values['mu']
-        table['flag'][i] = p.flag
+        table['success'][i] = p.success
         
         if verbose is True:
             p.report()
 
-    elapse = time.time() - start
+    elapsed = time.time() - start
+    print('DURATION: %4.1f min.' % elapsed/60.)
 
     if save is not None:
         pass
