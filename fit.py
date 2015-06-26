@@ -15,68 +15,101 @@ from Classdef import Statfit
 
 def hk_param0(sample, method='basic'):
     """Estimate initial parameters for HK fitting
+    
+    Arguments
+    ---------
+    sample : sequence
+        amplitudes
+        
+    Keywords
+    --------
+    method : string
+        methodto compute the initial parameters
     """
     if method is 'basic':
-        a0 = mean(x)
-        s0 = np.std(x)
-        mu0 = 10.
-    return a0, s0, mu0
+        a0 = np.average(sample)
+        s0 = np.std(sample)
+        mu0 = 1.
+    return {'a0':a0, 's0':s0, 'mu0':mu0}
 
 
-
-def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, ftol=1e-1,
-       xtol=1e-2, bins=20, range=(0,1), density=True):
+def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
+       range=(0,1), density=True, method='lbfgsb', **pdfkws):
     """HK fit with lmfit.minimize
-    sample = if x not specified, sample should be amplitudes between 0 and 1
-    x = a vector if 'sample' is already the y coordinates of a distribution
-    param0 = Initial parameters
-    ftol = 
-    xtol = 
-    bins = number of bins in the range
-    density = If True, the result is the value of the probability density
-              function at the bin, normalized such that the integral over the
-              range is 1
-    OUTPUT:
-    flag = 0  improper input parameters
-    flag = 1  both actual and predicted relative reductions in the sum of
-              squares are at most ftol
-    flag = 2  relative error between two consecutive iterates is at most xtol
-    flag = 3  conditions for info = 1 and info = 2 both hold
-    flag = 4  the cosine of the angle between fvec and any column of the
-              jacobian is at most gtol in absolute value
-    flag = 5  number of calls to fcn has reached or exceeded maxfev
-    flag = 6  ftol is too small. no further reduction in the sum of squares
-              is possible
-    flag = 7  xtol is too small. no further improvement in the approximate
-              solution x is possible
-    flag = 8  gtol is too small. fvec is orthogonal to the columns of the
-              jacobian to machine precision
-    """
     
+    Arguments
+    ---------
+    sample : sequence
+        if x not specified, sample should be amplitudes between 0 and 1.
+    
+    Keywords
+    --------
+    x : sequence
+        a vector if 'sample' is already the y coordinates of a distribution.
+    param0 : dict
+        Initial parameters.
+    range : sequence
+        x range considered for the fit.
+    bins : int
+        number of bins in the range.
+    density : bool
+        If True, the result is the value of the probability density function at
+        the bin, normalized such that the integral over the range is 1.
+    fitmethod : string
+        name of the optimization method
+    pdfkws : dict
+        keywords to be passed to the HK function
+    """
     start = time.time()
+
+    sample = np.array(sample)
+    sample = sample[~np.isnan(sample)] # Remove NaN
 
     if x is None: # Make the histogram
         y, edges = np.histogram(sample, bins=bins, range=range, density=density)
         x = edges[1:] - abs(edges[1]-edges[0])/2
     else:
         y = sample
-
-    sample = np.array(sample)
-    sample = sample[~np.isnan(sample)] # Remove NaN
+   
+    ind = rm3zeros(y) #remove 0 if more than three consecutives
+    y = y[ind]
+    x = x[ind]
 
     eps = y*.1 # Uncertainty
+
     p0 = Parameters()
     #     (Name,    Value,                 Vary,   Min,    Max,    Expr)
     p0.add('a',     param0['a0'],          True,   0,      1,      None)
     p0.add('s',     param0['s0'],          True,   0.001,  1,      None)
-    p0.add('mu',    param0['mu0'],         True,   0.1,    50,     None)
+    p0.add('mu',    param0['mu0'],         True,   None,   100,     None)
     p0.add('pt',    np.average(sample)**2, None,   None,   None,   'a**2+2*s**2')
-
-    p = minimize(pdf.hk, p0, args=(x, y), xtol=xtol, ftol=ftol) # Fit
     
-    #yfit = pdf.hk(p.values, x) #fitted y-vector
+    p = minimize(pdf.hk, p0, args=(x, y), kws=pdfkws, method=method) # Fit
     
-    elapse = time.time() - start
-
+    elapsed = time.time() - start
+    
     return Statfit(sample, p.userfcn, p.kws, range, bins, p.values, p.params,
-		           p.chisqr, p.redchi, elapse, p.message, p.ier)
+                   p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success)
+
+
+
+def rm3zeros(vec):
+    """Return a index vector to locate where zeros are not consecutive
+    
+    Arguments
+    ---------
+    vec : sequence
+    
+    Example
+    -------
+    vec = [3,    0,    0,     0,    4,    5,    0,    0]
+    out = [True, True, False, True, True, True, True, True]
+    """
+    out = ~np.empty(vec.size, bool)
+    
+    for i in np.arange(vec.size-2)+1:
+        if vec[i-1] == 0 and vec[i+1] == 0:
+            out[i]=False
+    if vec[0] == 0 and vec[1] == 0: out[0] = False
+    if vec[-1] == 0 and vec[-2] == 0: out[-1] = False
+    return out 

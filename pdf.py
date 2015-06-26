@@ -6,7 +6,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 import math 
 import numpy as np
 from scipy import stats, integrate
-from scipy.special import jv, kv, digamma
+from scipy.special import jv, kv, j0, digamma
 
 
 
@@ -82,11 +82,29 @@ def k(params, x, data=None, eps=None):
 
 
 
-def hk(params, x, data=None, eps=None, method = 'compound', verbose=False):
-    """Homodyne K-distribution from various methods:
-    'analytic' = from the common analytic form (!!UNSTABLE!!)
-    'compound' = from the compound representation [Destrempes and Cloutier,
-                 2010, Ultrasound in Med. and Biol. 36(7): 1037 to 1051, Eq. 16]
+def hk(params, x, data=None, eps=None, method = 'analytic', verbose=False):
+    """Homodyne K-distribution from various methods
+    
+    Arguments
+    ---------
+    params : dict
+        params for the hk function {'a', 's', 'mu'}
+    x : sequence
+        x coordinates
+    
+    Keywords
+    --------
+    data : sequence
+        data to compare the result with (for minimization)
+    eps : sequence
+        error on the data
+    method : string
+        'analytic' = from the common analytic form
+        'compound' = from the compound representation [Destrempes and Cloutier,
+                     2010, Ultrasound in Med. and Biol. 36(7): 1037-51, Eq. 16]
+        NB: 'compound' is less unstable than 'analytic' but is ~10x longer!
+    verbose : bool
+        print fitting report
     """
     # Initialisation
     a = params['a']
@@ -100,7 +118,7 @@ def hk(params, x, data=None, eps=None, method = 'compound', verbose=False):
     
     def integrand(w, x, a, s, mu, method=method):
         if method == 'analytic':
-            return x*w*jv(0, w*a)*jv(0, w*x)*(1. +w**2*s**2/(2.*mu))**-mu
+            return x*w*j0(w*a)*j0(w*x)*(1. +w**2*s**2/(2.*mu))**-mu
         if method == 'compound':
             return rice({'a':a,'s':s*np.sqrt(w/mu)}, x) * gamma({'mu':mu}, w)
             

@@ -7,93 +7,96 @@ import pdf
 import matplotlib.pyplot as plt
 
 class Statfit:
-	"""Class holding statistical fit results
-	"""
-	def __init__(self, sample, func, kws, range, bins, values, params, chisqr,
-	             redchi, elapsed, message, flag):
-		self.sample = sample
-		self.func = func
-		self.kws = kws
-		self.range = range
-		self.bins = bins
-		self.values = values
-		self.params = params
-		self.chisqr = chisqr
-		self.redchi = redchi
-		self.elapsed = elapsed
-		self.message = message
-		self.flag = flag
-		
+    """Class holding statistical fit results
+    """
+    def __init__(self, sample, func, kws, range, bins, values, params, chisqr,
+                 redchi, elapsed, nfev, message, success):
+        self.sample = sample
+        self.func = func
+        self.kws = kws
+        self.range = range
+        self.bins = bins
+        self.values = values
+        self.params = params
+        self.chisqr = chisqr
+        self.redchi = redchi
+        self.elapsed = elapsed
+        self.nfev = nfev
+        self.message = message
+        self.success = success
 
-	def power(self, db=True):
-	    """coherent (pc) and incoherent (pn) components in power 
-	    """
-	    pt, pc, pn = np.average(self.sample)**2, self.values['a']**2, 2*self.values['s']**2
-	    if db is True:
-	        pt, pc, pn = 10*np.log10(pt), 10*np.log10(pc), 10*np.log10(pn)
-	    return {'pt':pt, 'pc':pc, 'pn':pn}
-	    
 
-	def histogram(self, **kwargs):
-	    """Coordinates for the histogram
-	    """
-	    return np.histogram(self.sample, bins=self.bins, range=self.range,
-	                        density=True, **kwargs)
-	    
+    def power(self, db=True):
+        """coherent (pc) and incoherent (pn) components in power 
+        """
+        pt, pc, pn = np.average(self.sample)**2, self.values['a']**2, 2*self.values['s']**2
+        if db is True:
+            pt, pc, pn = 10*np.log10(pt), 10*np.log10(pc), 10*np.log10(pn)
+        return {'pt':pt, 'pc':pc, 'pn':pn}
 
-	def yfunc(self, x=None, **kwargs):
-	    """coordinates for the theoretical fit
-	    Can change the x coordinates (initial by default)
-	    """
-	    if x is None:
-	        y, edges = self.histogram(**kwargs)
-	        x = edges[1:] - abs(edges[1]-edges[0])/2
-	    return self.func(self.values, x, **kwargs), x
-	    
 
-	def corrcoef(self, **kwargs):
-	    """Correlation coefficient between distribution and theoretical fit
-	    """
-	    ydata, x = self.histogram(**kwargs)
-	    y, tmp = self.yfunc()
-	    return np.corrcoef(y, ydata)[0,1]
-	    
+    def histogram(self, **kwargs):
+        """Coordinates for the histogram
+        """
+        return np.histogram(self.sample, bins=self.bins, range=self.range,
+                            density=True, **kwargs)
 
-	def plot(self, ylabel='Probability'):
-	    y, edges = self.histogram()
-	    width = edges[1]-edges[0]
-	    xplot = np.linspace(0,1,100)
-	    yplot, tmp = self.yfunc(x=xplot)
-	    
-	    if ylabel is 'Occurences':
-	        factor = self.sample.size*width
-	    if ylabel is 'Probability':
-	        factor = width
-	    if ylabel is 'Normalized probability':
-	        factor = 1.
-	    
-	    plt.bar(edges[0:-1], y*factor, width=width, color='.9', edgecolor='.7')
-	    plt.plot(xplot, yplot*factor, color='k', linewidth=2)
-	    plt.xlim((0,1))
-	    plt.ylabel(ylabel, size=17)
-	    plt.xlabel('Amplitude', size=17)
-	    plt.yticks(size='17')
-	    plt.xticks(size='17')
-	    
 
-	def report(self):
-		buff = []
-		add = buff.append
-		p = self.params
-		s = self.power()
+    def yfunc(self, x=None, **kwargs):
+        """coordinates for the theoretical fit
+        Can change the x coordinates (initial by default)
+        """
+        if x is None:
+            y, edges = self.histogram()
+            x = edges[1:] - abs(edges[1]-edges[0])/2
+        return self.func(self.values, x, method='compound'), x
 
-		add("[" + "%7.2f" % self.elapsed + " s.]  " + self.message + " ["+str(self.flag)+"]")
-		add("\n")
-		for i, key in enumerate(self.values.keys()):
-			add(key + " = " + "%5.3f" % p[key].value + " +/- " + "%5.3f" % p[key].stderr+", ")
-		add("crl = " + "%3.3f" % self.corrcoef()+", ")
-		for i, key in enumerate(s):
-			add(key + " = " + "%3.1f" % s[key] + ' dB, ')
-		add("\n")
-		out = "".join(buff)
-		print(out)
+
+    def crl(self, **kwargs):
+        """Correlation coefficient between distribution and theoretical fit
+        """
+        ydata, x = self.histogram(**kwargs)
+        y, tmp = self.yfunc()
+        return np.corrcoef(y, ydata)[0,1]
+
+
+    def plot(self, ylabel='Probability'):
+        """Plot histogram and pdf
+        """
+        y, edges = self.histogram()
+        width = edges[1]-edges[0]
+        xplot = np.linspace(0,1,100)
+        yplot, tmp = self.yfunc(x=xplot)
+
+        if ylabel is 'Occurences':
+            factor = self.sample.size*width
+        if ylabel is 'Probability':
+            factor = width
+        if ylabel is 'Normalized probability':
+            factor = 1.
+
+        plt.bar(edges[0:-1], y*factor, width=width, color='.9', edgecolor='.7')
+        plt.plot(xplot, yplot*factor, color='k', linewidth=2)
+        plt.xlim((0,1))
+        plt.ylabel(ylabel, size=17)
+        plt.xlabel('Amplitude', size=17)
+        plt.yticks(size='17')
+        plt.xticks(size='17')
+
+
+    def report(self):
+        """Print a report for the fit
+        """
+        buff = []
+        add = buff.append
+
+        add('[%6.2f s.] [%3.0f eval.] [%s] %s\n' 
+            % (self.elapsed, self.nfev, self.success, self.message))
+        for i, key in enumerate(self.values.keys()):
+            add('%s = %5.3f, ' % (key, self.params[key].value))
+        add('crl = %3.3f\n' % (self.crl()))
+        for i, key in enumerate(self.power().keys()):
+            add('%s = %3.1f dB, ' % (key, self.power()[key]))
+        add("\n")
+        out = "".join(buff)
+        print(out)

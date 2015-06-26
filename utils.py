@@ -11,13 +11,24 @@ from pandas import DataFrame
 
 
 def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
-                 verbose=True, **kwargs):
+                 verbose=True, **kws):
     """Histogram statistical estimation over windows sliding along a vector
-    vec = A vector of linear amplitude values
-    method to use to estimate the histogram statistics (shoulf be in .fit)
-    winsize = number of amplitude values within a window
-    sampling = window repeat rate
-    save = file name to save the results in (ascii file)
+    
+    Arguments
+    ---------
+    vec : sequence
+        A vector of linear amplitude values
+    
+    Keywords
+    --------
+    method : string
+        method to use to estimate the histogram statistics (in .fit)
+    winsize : int
+        number of amplitude values within a window
+    sampling : int
+        window repeat rate
+    save : string
+        file name to save the results in (ascii file)
     """
     start = time.time()
 
@@ -36,16 +47,20 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
         if verbose is True:
             print('ITER '+ str(i+1) + '/' + str(xa.size) +
             ' (observations ' + str(xa[i]) + '-' + str(xb[i]) + ')')
+            
         sample = vec[xa[i]:xb[i]]
-        p = getattr(fit, method)(sample, **kwargs)
-        if verbose is True:
-            p.report()
+        param0 = getattr(fit, method+'_param0')(sample)
+        p = getattr(fit, method)(sample, param0=param0, kws=kws)
+        
         table['pt'][i] = p.power()['pt']
         table['pc'][i] = p.power()['pc']
         table['pn'][i] = p.power()['pn']
         table['crl'][i] = p.corrcoef()
         table['mu'][i] = p.values['mu']
         table['flag'][i] = p.flag
+        
+        if verbose is True:
+            p.report()
 
     elapse = time.time() - start
 
@@ -57,7 +72,14 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
 
 
 def hk_pdf_sample(params, x):
-    """Generate a hk distribution with noise. Use it fit testing.
+    """Generate a hk distribution with noise. Use it fit testing
+    
+    Arguments
+    ---------
+    params : dict
+        parameters for the HK function
+    x : sequence
+        x coordinates
     """
     # Extract parameters
     a = params['s']
