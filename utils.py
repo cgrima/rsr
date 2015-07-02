@@ -63,7 +63,7 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
             p.report()
 
     elapsed = time.time() - start
-    print('DURATION: %4.1f min.' % elapsed/60.)
+    print('DURATION: %4.1f min.' % (elapsed/60.))
 
     if save is not None:
         pass

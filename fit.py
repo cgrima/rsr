@@ -9,6 +9,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
+from mpfit import mpfit
 from scipy import optimize
 from Classdef import Statfit
 
@@ -34,8 +35,8 @@ def hk_param0(sample, method='basic'):
 
 
 def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
-       range=(0,1), density=True, method='lbfgsb', **kws):
-    """HK fit with lmfit.minimize
+       range=(0,1), density=True, algo='lmfit', method='leastsq', **kws):
+    """HK fit
     
     Arguments
     ---------
@@ -55,8 +56,10 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
     density : bool
         If True, the result is the value of the probability density function at
         the bin, normalized such that the integral over the range is 1.
-    fitmethod : string
-        name of the optimization method
+    algo: string
+        fit algorithm to use, whether 'lmfit' or 'mpfit'.
+    method : string
+        name of the optimization method (for lmfit algorithm onliy)
     kws : dict
         keywords to be passed to the HK function
     """
@@ -81,16 +84,45 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
     #     (Name,    Value,                 Vary,   Min,    Max,    Expr)
     p0.add('a',     param0['a0'],          True,   0,      1,      None)
     p0.add('s',     param0['s0'],          True,   0.001,  1,      None)
-    p0.add('mu',    param0['mu0'],         True,   0.1,    100,    None)
+    p0.add('mu',    param0['mu0'],         True,   0.1,    1000,   None)
     p0.add('pt',    np.average(sample)**2, None,   0,      1,      'a**2+2*s**2')
-    
-    p = minimize(pdf.hk, p0, args=(x, y), method=method, **kws) # Fit
+
+    if algo is 'lmfit': # Fit
+        try: # use 'lbfgs' 'leastsq' error
+            p = minimize(pdf.hk, p0, args=(x, y), method=method, **kws)
+        except KeyboardInterrupt:
+            raise
+        except:
+            print('!! Error with %s fit, use L-BFGS-B instead' % (method))
+            p = minimize(pdf.hk, p0, args=(x, y), method='lbfgs', **kws)
+    if algo is 'mpfit':
+        print('!! Not implemented yet')
+        #p = hk_mpfit(p0, {'x':x, 'y':y, 'err':eps})
     
     elapsed = time.time() - start
     
     return Statfit(sample, p.userfcn, p.kws, range, bins, p.values, p.params,
                    p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success)
 
+
+def hk_mpfit(p0, functkw):
+    """HK fit with the mpfit algorithm
+    
+    Arguments
+    ---------
+    p0 : Parameters Class
+        from lmfit package
+    functkw : dict
+        {'x': x coordinates, 'y': y coordinates,'err': error}
+    """
+    par = [p0['a'].value, p0['s'].value, p0['mu'].value, p0['pt'].value]
+    parinfo = [
+        {'fixed': not int(p0['a']), 'limited': [0, 0], 'limits': [0.0, 0.0], 'value': 1.0},
+        {},
+        {},
+        {},
+        ]
+    return mpfit(pdf.hk_mpfit, par, parinfo=parinfo,functkw=functkw)
 
 
 def rm3zeros(vec):
