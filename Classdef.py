@@ -42,14 +42,14 @@ class Statfit:
                             density=True, **kwargs)
 
 
-    def yfunc(self, x=None, **kwargs):
+    def yfunc(self, x=None, method='compound'):
         """coordinates for the theoretical fit
         Can change the x coordinates (initial by default)
         """
         if x is None:
             y, edges = self.histogram()
             x = edges[1:] - abs(edges[1]-edges[0])/2
-        return self.func(self.values, x, method='compound'), x
+        return self.func(self.values, x, method=method), x
 
 
     def crl(self, **kwargs):
@@ -60,13 +60,14 @@ class Statfit:
         return np.corrcoef(y, ydata)[0,1]
 
 
-    def plot(self, ylabel='Probability'):
+    def plot(self, ylabel='Probability', color='k', alpha=.1,
+             method='compound'):
         """Plot histogram and pdf
         """
         y, edges = self.histogram()
         width = edges[1]-edges[0]
         xplot = np.linspace(0,1,100)
-        yplot, tmp = self.yfunc(x=xplot)
+        yplot, tmp = self.yfunc(x=xplot, method=method)
 
         if ylabel is 'Occurences':
             factor = self.sample.size*width
@@ -75,8 +76,9 @@ class Statfit:
         if ylabel is 'Normalized probability':
             factor = 1.
 
-        plt.bar(edges[0:-1], y*factor, width=width, color='.9', edgecolor='.7')
-        plt.plot(xplot, yplot*factor, color='k', linewidth=2)
+        plt.bar(edges[0:-1], y*factor, width=width,
+                color=color, edgecolor=color, alpha=alpha)
+        plt.plot(xplot, yplot*factor, color=color, linewidth=2)
         plt.xlim((0,1))
         plt.ylabel(ylabel, size=17)
         plt.xlabel('Amplitude', size=17)
