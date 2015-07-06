@@ -89,7 +89,8 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
 
     if algo is 'lmfit': # Fit
         try: # use 'lbfgs' 'leastsq' error
-            p = minimize(pdf.hk, p0, args=(x, y), method=method, **kws)
+            p = minimize(pdf.hk, p0, args=(x, y), method=method,
+			 xtol=1e-4, ftol=1e-4, **kws)
         except KeyboardInterrupt:
             raise
         except:
@@ -142,6 +143,6 @@ def rm3zeros(vec):
     for i in np.arange(vec.size-2)+1:
         if vec[i-1] == 0 and vec[i+1] == 0:
             out[i]=False
-    if vec[0] == 0 and vec[1] == 0: out[0] = False
-    if vec[-1] == 0 and vec[-2] == 0: out[-1] = False
+    #if vec[0] == 0 and vec[1] == 0: out[0] = False
+    #if vec[-1] == 0 and vec[-2] == 0: out[-1] = False
     return out 

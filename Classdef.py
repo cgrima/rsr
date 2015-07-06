@@ -3,7 +3,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import numpy as np
-import pdf
+import pdf, fit
 import matplotlib.pyplot as plt
 
 class Statfit:
@@ -35,11 +35,13 @@ class Statfit:
         return {'pt':pt, 'pc':pc, 'pn':pn}
 
 
-    def histogram(self, **kwargs):
+    def histogram(self, bins=None):
         """Coordinates for the histogram
         """
-        return np.histogram(self.sample, bins=self.bins, range=self.range,
-                            density=True, **kwargs)
+        if bins is None:
+            bins = self.bins
+        return np.histogram(self.sample, bins=bins, range=self.range,
+                            density=True)
 
 
     def yfunc(self, x=None, method='compound'):
@@ -64,11 +66,10 @@ class Statfit:
              method='compound'):
         """Plot histogram and pdf
         """
-        y, edges = self.histogram()
+        y, edges = self.histogram(bins=self.bins)
         width = edges[1]-edges[0]
         xplot = np.linspace(0,1,100)
-        yplot, tmp = self.yfunc(x=xplot, method=method)
-
+        yplot, xplot = self.yfunc(x=xplot, method=method)
         if ylabel is 'Occurences':
             factor = self.sample.size*width
         if ylabel is 'Probability':
