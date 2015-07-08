@@ -34,8 +34,9 @@ def hk_param0(sample, method='basic'):
     return {'a0':a0, 's0':s0, 'mu0':mu0}
 
 
-def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
-       range=(0,1), density=True, algo='lmfit', method='leastsq', **kws):
+def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=200,
+       range=(0,1), density=True, algo='lmfit', method='leastsq',
+       xtol=1e-4, ftol=1e-4, **kws):
     """HK fit
     
     Arguments
@@ -73,12 +74,12 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
         x = edges[1:] - abs(edges[1]-edges[0])/2
     else:
         y = sample
-   
+
     ind = rm3zeros(y) #remove 0 if more than three consecutives
     y = y[ind]
     x = x[ind]
 
-    eps = y*.1 # Uncertainty
+    eps = y*.1 # Uncertainty [y*.05+mean(y)*.1]
 
     p0 = Parameters()
     #     (Name,    Value,                 Vary,   Min,    Max,    Expr)
@@ -90,7 +91,7 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=50,
     if algo is 'lmfit': # Fit
         try: # use 'lbfgs' 'leastsq' error
             p = minimize(pdf.hk, p0, args=(x, y), method=method,
-			 xtol=1e-4, ftol=1e-4, **kws)
+			 xtol=xtol, ftol=ftol, **kws)
         except KeyboardInterrupt:
             raise
         except:

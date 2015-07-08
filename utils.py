@@ -46,7 +46,7 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
     for i, val in enumerate(xo): # Histogram estimation
         if verbose is True:
             print('ITER '+ str(i+1) + '/' + str(xa.size) +
-            ' (observations ' + str(xa[i]) + '-' + str(xb[i]) + ')')
+            ' (observations ' + str(xa[i]) + ':' + str(xb[i]) + ')')
             
         sample = vec[xa[i]:xb[i]]
         param0 = getattr(fit, method+'_param0')(sample)

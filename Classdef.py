@@ -5,6 +5,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 import numpy as np
 import pdf, fit
 import matplotlib.pyplot as plt
+from scipy import interpolate
 
 class Statfit:
     """Class holding statistical fit results
@@ -50,7 +51,7 @@ class Statfit:
         """
         if x is None:
             y, edges = self.histogram()
-            x = edges[1:] - abs(edges[1]-edges[0])/2
+            x = edges[1:] # - abs(edges[1]-edges[0])/2
         return self.func(self.values, x, method=method), x
 
 
@@ -63,23 +64,27 @@ class Statfit:
 
 
     def plot(self, ylabel='Probability', color='k', alpha=.1,
-             method='compound'):
+             method='compound', bins=None):
         """Plot histogram and pdf
         """
-        y, edges = self.histogram(bins=self.bins)
-        width = edges[1]-edges[0]
+        y, edges = self.histogram(bins=bins)
+        width = np.array([abs(edges[i+1] - edges[i]) for i, val in enumerate(y)])
         xplot = np.linspace(0,1,100)
         yplot, xplot = self.yfunc(x=xplot, method=method)
         if ylabel is 'Occurences':
             factor = self.sample.size*width
+            factor2 = interpolate.interp1d(edges[0:-1], factor,
+                                          bounds_error=False)(xplot)
         if ylabel is 'Probability':
             factor = width
-        if ylabel is 'Normalized probability':
-            factor = 1.
+            factor2 = interpolate.interp1d(edges[0:-1], factor,
+                                          bounds_error=False)(xplot)
+        if ylabel is 'Normalized_probability':
+            factor = factor2 = 1.
 
         plt.bar(edges[0:-1], y*factor, width=width,
                 color=color, edgecolor=color, alpha=alpha)
-        plt.plot(xplot, yplot*factor, color=color, linewidth=2)
+        plt.plot(xplot, yplot*factor2, color=color, linewidth=2)
         plt.xlim((0,1))
         plt.ylabel(ylabel, size=17)
         plt.xlabel('Amplitude', size=17)
