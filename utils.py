@@ -10,8 +10,8 @@ from pandas import DataFrame
 
 
 
-def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
-                 verbose=True, **kws):
+def inline_estim(vec, stat='hk', winsize=1000., sampling=100.,
+                 save='.inline_estim_last', verbose=True, **kws):
     """Histogram statistical estimation over windows sliding along a vector
     
     Arguments
@@ -21,14 +21,16 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
     
     Keywords
     --------
-    method : string
-        method to use to estimate the histogram statistics (in .fit)
+    stat : string
+        stat to use to estimate the histogram statistics (in .fit)
     winsize : int
         number of amplitude values within a window
     sampling : int
         window repeat rate
     save : string
-        file name to save the results in (ascii file)
+        file name (without extension) to save the results in an ascii file
+    verbose : bool
+        Display fit results informations
     """
     start = time.time()
 
@@ -38,7 +40,7 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
     if xb[-1] > x[-1]: xb[-1] = x[-1] #cut last window in limb
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
-    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'mu', 'success']
+    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'mu', 'flag']
     index = np.arange(xa.size)
     table = DataFrame({'xa':xa, 'xb':xb, 'xo':xo},
                       index=index, columns=columns) # Table to hold the results
@@ -49,15 +51,15 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
             ' (observations ' + str(xa[i]) + ':' + str(xb[i]) + ')')
             
         sample = vec[xa[i]:xb[i]]
-        param0 = getattr(fit, method+'_param0')(sample)
-        p = getattr(fit, method)(sample, param0=param0, kws=kws)
+        param0 = getattr(fit, stat+'_param0')(sample)
+        p = getattr(fit, stat)(sample, param0=param0, kws=kws)
         
         table['pt'][i] = p.power()['pt']
         table['pc'][i] = p.power()['pc']
         table['pn'][i] = p.power()['pn']
         table['crl'][i] = p.crl()
         table['mu'][i] = p.values['mu']
-        table['success'][i] = p.success
+        table['flag'][i] = int(p.success*p.crl() > 0)
         
         if verbose is True:
             p.report()
@@ -66,7 +68,8 @@ def inline_estim(vec, method='hk', winsize=1000., sampling=100., save=None,
     print('DURATION: %4.1f min.' % (elapsed/60.))
 
     if save is not None:
-        pass
+        ext = '.'+stat
+        table.to_csv(save+ext+'.txt', sep='\t', index=False, float_format='%.3f')
 
     return table
 
