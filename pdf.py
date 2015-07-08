@@ -131,3 +131,27 @@ def hk(params, x, data=None, eps=None, method = 'analytic', verbose=False):
     if eps is None:
         return (model - data) #residual
     return (model - data)/eps
+
+
+def hk_mpfit(p, fjac=None, x=None, y=None, err=None, method='analytic'):
+    """Homodyne K-distribution adapted for use of the mpfit.py package
+    
+    Arguments
+    ---------
+    p : sequence
+        params for the HK function in this order (a, s, mu)
+    
+    Keywords
+    --------
+    fjac : If None then partial derivatives should not be computed. It will
+        always be None if MPFIT is called with default flag.
+    x : sequence
+        x coordinates
+    y : sequence
+        data to compare the result with (for minimization)
+    err : sequence
+        error on the data
+    """
+    params = {'a':p[0],'s':p[1],'mu':p[2]}
+    print('!! Not implemented yet')
+    #return hk(params, x, data=y, eps=err, method=method)

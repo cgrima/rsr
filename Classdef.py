@@ -3,8 +3,9 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import numpy as np
-import pdf
+import pdf, fit
 import matplotlib.pyplot as plt
+from scipy import interpolate
 
 class Statfit:
     """Class holding statistical fit results
@@ -35,21 +36,23 @@ class Statfit:
         return {'pt':pt, 'pc':pc, 'pn':pn}
 
 
-    def histogram(self, **kwargs):
+    def histogram(self, bins=None):
         """Coordinates for the histogram
         """
-        return np.histogram(self.sample, bins=self.bins, range=self.range,
-                            density=True, **kwargs)
+        if bins is None:
+            bins = self.bins
+        return np.histogram(self.sample, bins=bins, range=self.range,
+                            density=True)
 
 
-    def yfunc(self, x=None, **kwargs):
+    def yfunc(self, x=None, method='compound'):
         """coordinates for the theoretical fit
         Can change the x coordinates (initial by default)
         """
         if x is None:
             y, edges = self.histogram()
-            x = edges[1:] - abs(edges[1]-edges[0])/2
-        return self.func(self.values, x, method='compound'), x
+            x = edges[1:] # - abs(edges[1]-edges[0])/2
+        return self.func(self.values, x, method=method), x
 
 
     def crl(self, **kwargs):
@@ -60,23 +63,28 @@ class Statfit:
         return np.corrcoef(y, ydata)[0,1]
 
 
-    def plot(self, ylabel='Probability'):
+    def plot(self, ylabel='Probability', color='k', alpha=.1,
+             method='compound', bins=None):
         """Plot histogram and pdf
         """
-        y, edges = self.histogram()
-        width = edges[1]-edges[0]
+        y, edges = self.histogram(bins=bins)
+        width = np.array([abs(edges[i+1] - edges[i]) for i, val in enumerate(y)])
         xplot = np.linspace(0,1,100)
-        yplot, tmp = self.yfunc(x=xplot)
-
+        yplot, xplot = self.yfunc(x=xplot, method=method)
         if ylabel is 'Occurences':
             factor = self.sample.size*width
+            factor2 = interpolate.interp1d(edges[0:-1], factor,
+                                          bounds_error=False)(xplot)
         if ylabel is 'Probability':
             factor = width
-        if ylabel is 'Normalized probability':
-            factor = 1.
+            factor2 = interpolate.interp1d(edges[0:-1], factor,
+                                          bounds_error=False)(xplot)
+        if ylabel is 'Normalized_probability':
+            factor = factor2 = 1.
 
-        plt.bar(edges[0:-1], y*factor, width=width, color='.9', edgecolor='.7')
-        plt.plot(xplot, yplot*factor, color='k', linewidth=2)
+        plt.bar(edges[0:-1], y*factor, width=width,
+                color=color, edgecolor=color, alpha=alpha)
+        plt.plot(xplot, yplot*factor2, color=color, linewidth=2)
         plt.xlim((0,1))
         plt.ylabel(ylabel, size=17)
         plt.xlabel('Amplitude', size=17)
