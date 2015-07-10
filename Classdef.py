@@ -3,7 +3,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import numpy as np
-import pdf, fit
+import pdf, fit, invert
 import matplotlib.pyplot as plt
 from scipy import interpolate
 
@@ -46,7 +46,7 @@ class Statfit:
 
 
     def yfunc(self, x=None, method='compound'):
-        """coordinates for the theoretical fit
+        """Coordinates for the theoretical fit
         Can change the x coordinates (initial by default)
         """
         if x is None:
@@ -61,6 +61,13 @@ class Statfit:
         ydata, x = self.histogram(**kwargs)
         y, tmp = self.yfunc()
         return np.corrcoef(y, ydata)[0,1]
+
+
+    def invert(self, frq=60e6, method='spm'):
+        """Invert signal components into physical properties
+        """
+        return getattr(invert, method)(frq, self.power()['pc'],
+                       self.power()['pn'])
 
 
     def plot(self, ylabel='Probability', color='k', alpha=.1,
@@ -92,7 +99,7 @@ class Statfit:
         plt.xticks(size='17')
 
 
-    def report(self):
+    def report(self, frq=60e6, inv='spm'):
         """Print a report for the fit
         """
         buff = []
@@ -105,6 +112,10 @@ class Statfit:
         add('crl = %3.3f\n' % (self.crl()))
         for i, key in enumerate(self.power().keys()):
             add('%s = %3.1f dB, ' % (key, self.power()[key]))
+        add("\n")
+        p = self.invert(frq=frq, method=inv)
+        add('%s @ %.0f MHz gives, eps = %.1f, sh = %.2f m' % (inv.upper(),
+            frq*1e-6, p['eps'], p['sh']))
         add("\n")
         out = "".join(buff)
         print(out)
