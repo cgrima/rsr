@@ -61,14 +61,23 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
         p = getattr(fit, stat)(sample, param0=param0, kws=kws)
         v = p.invert(frq=frq, method=inv)
         
-        table.set_value('pt', i, p.power()['pt'])
-        table.set_value('pc', i, p.power()['pc'])
-        table.set_value('pn', i, p.power()['pn'])
-        table.set_value('crl', i, p.crl())
-        table.set_value('mu', i, p.values['mu'])
-        table.set_value('eps', i, v['eps'])
-        table.set_value('sh', i, v['sh'])
-        table.set_value('flag', i, int(p.success*p.crl() > 0))
+        table.loc[i, 'pt'] = p.power()['pt']
+        table.loc[i, 'pc'] = p.power()['pc']
+        table.loc[i, 'pn'] = p.power()['pn']
+        table.loc[i, 'crl'] = p.crl()
+        table.loc[i, 'mu'] = p.values['mu']
+        table.loc[i, 'eps'] = v['eps']
+        table.loc[i, 'sh'] = v['sh']
+        table.loc[i, 'flag'] = int(p.success*p.crl() > 0)
+        
+        #table.set_value('pt', i, p.power()['pt'])
+        #table.set_value('pc', i, p.power()['pc'])
+        #table.set_value('pn', i, p.power()['pn'])
+        #table.set_value('crl', i, p.crl())
+        #table.set_value('mu', i, p.values['mu'])
+        #table.set_value('eps', i, v['eps'])
+        #table.set_value('sh', i, v['sh'])
+        #table.set_value('flag', i, int(p.success*p.crl() > 0))
         
         if verbose is True:
             p.report(frq=frq)
