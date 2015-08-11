@@ -61,17 +61,17 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
         p = getattr(fit, stat)(sample, param0=param0, kws=kws)
         v = p.invert(frq=frq, method=inv)
         
-        table['pt'][i] = p.power()['pt']
-        table['pc'][i] = p.power()['pc']
-        table['pn'][i] = p.power()['pn']
-        table['crl'][i] = p.crl()
-        table['mu'][i] = p.values['mu']
-        table['eps'][i] = v['eps']
-        table['sh'][i] = v['sh']
-        table['flag'][i] = int(p.success*p.crl() > 0)
+        table.set_value('pt', i, p.power()['pt'])
+        table.set_value('pc', i, p.power()['pc'])
+        table.set_value('pn', i, p.power()['pn'])
+        table.set_value('crl', i, p.crl())
+        table.set_value('mu', i, p.values['mu'])
+        table.set_value('eps', i, v['eps'])
+        table.set_value('sh', i, v['sh'])
+        table.set_value('flag', i, int(p.success*p.crl() > 0))
         
         if verbose is True:
-            p.report()
+            p.report(frq=frq)
 
     elapsed = time.time() - start
     print('DURATION: %4.1f min.' % (elapsed/60.))
