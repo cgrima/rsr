@@ -56,7 +56,7 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
             print('ITER '+ str(i+1) + '/' + str(xa.size) +
             ' (observations ' + str(xa[i]) + ':' + str(xb[i]) + ')')
             
-        sample = vec[xa[i]:xb[i]]
+        sample = vec[int(xa[i]):int(xb[i])]
         param0 = getattr(fit, stat+'_param0')(sample)
         p = getattr(fit, stat)(sample, param0=param0, kws=kws)
         v = p.invert(frq=frq, method=inv)
@@ -118,7 +118,7 @@ def plot_inline(a, frq=60e6):
     plt.ylabel(r'Correl. Coeff.', size=17)
     plt.xticks(size='10')
     plt.yticks(size='15')
-    plt.tick_params(labelbottom=False)
+    #plt.tick_params(labelbottom=False)
 
     ax_pwr = plt.subplot2grid((5,1), (1, 0), rowspan=2) # Signal components
     #plt.plot(x, pt, lw=10, color='k', alpha=.2, label=r'Total $(P_t)$')
@@ -131,7 +131,7 @@ def plot_inline(a, frq=60e6):
     plt.ylabel(r'Power $[dB]$', size=17)
     plt.yticks(size='15')
     plt.xticks(size='10')
-    plt.tick_params(labelbottom=False)
+    #plt.tick_params(labelbottom=False)
     plt.legend(loc='lower right', fancybox=True).get_frame().set_alpha(0.5)
     
     ax_eps = plt.subplot2grid((5,1), (3, 0), rowspan=2) # Permittivity
@@ -139,6 +139,8 @@ def plot_inline(a, frq=60e6):
     plt.ylim(1,100)
     plt.grid(True, which='both', alpha=.5)
     plt.ylabel('Permittivity', size=17)
+    plt.xticks(size='10')
+    plt.xlabel('Frame #', size=12)
     plt.yticks(size='15')
     ax_eps.set_yticks([1, 10, 100])
     ax_eps.set_yticklabels(['1', '10', '100'])
@@ -147,9 +149,9 @@ def plot_inline(a, frq=60e6):
     plt.semilogy(x, sh, '-', color='k', lw=3, alpha=.3, label=r'RMS height $(\sigma_h)$')
     plt.semilogy(x, eps, color='k', lw=3, alpha=.9, label=r'Permittivity $(\epsilon)$')
     plt.ylim(0.01,1)
-    plt.xlabel('Frame', size=17)
+    #plt.xlabel('Frame', size=17)
     plt.ylabel(r'RMS height $[m]$', size=17)
-    ax_sh.set_xticklabels([],size='15', rotation=90)
+    #ax_sh.set_xticklabels([],size='15', rotation=90)
     plt.yticks(size='15')
     ax_sh.set_yticks([.01, .1, 1])
     ax_sh.set_yticklabels(['0.01', '0.1', '1'])
