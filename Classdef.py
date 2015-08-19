@@ -5,13 +5,13 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 import numpy as np
 import pdf, fit, invert
 import matplotlib.pyplot as plt
-from scipy import interpolate
+from scipy import interpolate, stats
 
 class Statfit:
     """Class holding statistical fit results
     """
     def __init__(self, sample, func, kws, range, bins, values, params, chisqr,
-                 redchi, elapsed, nfev, message, success):
+                 redchi, elapsed, nfev, message, success, residual, y0):
         self.sample = sample
         self.func = func
         self.kws = kws
@@ -25,6 +25,8 @@ class Statfit:
         self.nfev = nfev
         self.message = message
         self.success = success
+        self.residual = residual
+        self.y0 = y0
 
 
     def power(self, db=True):
@@ -45,8 +47,8 @@ class Statfit:
                             density=True)
 
 
-    def yfunc(self, x=None, method='compound'):
-        """Coordinates for the theoretical fit
+    def yfunc(self, x=None, method='leastsq'):
+        """Compute coordinates for the theoretical fit
         Can change the x coordinates (initial by default)
         """
         if x is None:
@@ -58,9 +60,7 @@ class Statfit:
     def crl(self, **kwargs):
         """Correlation coefficient between distribution and theoretical fit
         """
-        ydata, x = self.histogram(**kwargs)
-        y, tmp = self.yfunc()
-        return np.corrcoef(y, ydata)[0,1]
+        return np.corrcoef(self.y0, self.y0+self.residual)[0,1]
 
 
     def invert(self, frq=60e6, method='spm'):

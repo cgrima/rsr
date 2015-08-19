@@ -104,7 +104,8 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=200,
     elapsed = time.time() - start
     
     return Statfit(sample, p.userfcn, p.kws, range, bins, p.values, p.params,
-                   p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success)
+                   p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
+                   p.residual, y)
 
 
 def hk_mpfit(p0, functkw):

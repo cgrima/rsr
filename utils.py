@@ -45,7 +45,7 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
     if xb[-1] > x[-1]: xb[-1] = x[-1] #cut last window in limb
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
-    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'mu', 'eps', 'sh',
+    columns = ['xa', 'xb', 'xo', 'pt', 'pc', 'pn', 'crl', 'chisqr', 'mu', 'eps', 'sh',
                'flag']
     index = np.arange(xa.size)
     table = DataFrame({'xa':xa, 'xb':xb, 'xo':xo},
@@ -65,6 +65,7 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
         table.loc[i, 'pc'] = p.power()['pc']
         table.loc[i, 'pn'] = p.power()['pn']
         table.loc[i, 'crl'] = p.crl()
+        table.loc[i, 'chisqr'] = p.chisqr
         table.loc[i, 'mu'] = p.values['mu']
         table.loc[i, 'eps'] = v['eps']
         table.loc[i, 'sh'] = v['sh']
@@ -92,7 +93,7 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
     return table
 
 
-def plot_inline(a, frq=60e6):
+def plot_inline(a, frq=60e6, title=''):
     """Plot infos from a DataFrame ceated by inline_estim
     
     Arguments
@@ -118,10 +119,10 @@ def plot_inline(a, frq=60e6):
     plt.ylabel(r'Correl. Coeff.', size=17)
     plt.xticks(size='10')
     plt.yticks(size='15')
+    plt.title(title, size='15')
     #plt.tick_params(labelbottom=False)
 
     ax_pwr = plt.subplot2grid((5,1), (1, 0), rowspan=2) # Signal components
-    #plt.plot(x, pt, lw=10, color='k', alpha=.2, label=r'Total $(P_t)$')
     ax_pwr.fill_between(x, pc, pn, where=pc>=pn, facecolor='k', alpha=.05, interpolate=True)
     ax_pwr.fill_between(x, pc, pn, where=pc<=pn, facecolor='k', alpha=.4, interpolate=True) 
     plt.plot(x, pc, color='k', lw=3, alpha=.9, label=r'Reflectance $(P_c)$')
@@ -149,9 +150,7 @@ def plot_inline(a, frq=60e6):
     plt.semilogy(x, sh, '-', color='k', lw=3, alpha=.3, label=r'RMS height $(\sigma_h)$')
     plt.semilogy(x, eps, color='k', lw=3, alpha=.9, label=r'Permittivity $(\epsilon)$')
     plt.ylim(0.01,1)
-    #plt.xlabel('Frame', size=17)
     plt.ylabel(r'RMS height $[m]$', size=17)
-    #ax_sh.set_xticklabels([],size='15', rotation=90)
     plt.yticks(size='15')
     ax_sh.set_yticks([.01, .1, 1])
     ax_sh.set_yticklabels(['0.01', '0.1', '1'])
