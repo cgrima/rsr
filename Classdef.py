@@ -114,7 +114,7 @@ class Statfit:
             add('%s = %3.1f dB, ' % (key, self.power()[key]))
         add("\n")
         p = self.invert(frq=frq, method=inv)
-        add('%s @ %.0f MHz gives, eps = %.1f, sh = %.2f m' % (inv.upper(),
+        add('%s @ %.0f MHz gives, eps = %.3f, sh = %.3f m' % (inv.upper(),
             frq*1e-6, p['eps'], p['sh']))
         add("\n")
         out = "".join(buff)
