@@ -60,7 +60,11 @@ class Statfit:
     def crl(self, **kwargs):
         """Correlation coefficient between distribution and theoretical fit
         """
-        return np.corrcoef(self.y0, self.y0+self.residual)[0,1]
+        try:
+            out = np.corrcoef(self.y0, self.y0+self.residual)[0,1]
+        except:
+            out = np.nan
+        return out
 
 
     def invert(self, frq=60e6, method='spm'):
@@ -114,7 +118,7 @@ class Statfit:
             add('%s = %3.1f dB, ' % (key, self.power()[key]))
         add("\n")
         p = self.invert(frq=frq, method=inv)
-        add('%s @ %.0f MHz gives, eps = %.1f, sh = %.2f m' % (inv.upper(),
+        add('%s @ %.0f MHz gives, eps = %.3f, sh = %.2f m' % (inv.upper(),
             frq*1e-6, p['eps'], p['sh']))
         add("\n")
         out = "".join(buff)
