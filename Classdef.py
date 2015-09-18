@@ -61,7 +61,11 @@ class Statfit:
         """Correlation coefficient between distribution and theoretical fit
         """
         try:
+<<<<<<< HEAD
             out = np.corrcoef(self.y0, self.y0+self.residual)[0,1]
+=======
+             out = np.corrcoef(self.y0, self.y0+self.residual)[0,1]
+>>>>>>> 1f61005d0bf1099b8a1b628f4a2f1013b3629fb5
         except:
             out = np.nan
         return out
@@ -118,7 +122,11 @@ class Statfit:
             add('%s = %3.1f dB, ' % (key, self.power()[key]))
         add("\n")
         p = self.invert(frq=frq, method=inv)
+<<<<<<< HEAD
         add('%s @ %.0f MHz gives, eps = %.3f, sh = %.2f m' % (inv.upper(),
+=======
+        add('%s @ %.0f MHz gives, eps = %.3f, sh = %.3f m' % (inv.upper(),
+>>>>>>> 1f61005d0bf1099b8a1b628f4a2f1013b3629fb5
             frq*1e-6, p['eps'], p['sh']))
         add("\n")
         out = "".join(buff)
