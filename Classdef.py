@@ -60,7 +60,11 @@ class Statfit:
     def crl(self, **kwargs):
         """Correlation coefficient between distribution and theoretical fit
         """
-        return np.corrcoef(self.y0, self.y0+self.residual)[0,1]
+        try:
+             out = np.corrcoef(self.y0, self.y0+self.residual)[0,1]
+        except:
+            out = np.nan
+        return out
 
 
     def invert(self, frq=60e6, method='spm'):
