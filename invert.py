@@ -27,7 +27,7 @@ def spm(frq, pc, pn):
     pn_lin = 10**(pn/10.)
     u = pc_lin/pn_lin
     sh = wl*exp(1/(2*u))/(4*ct.pi*sqrt(u))
-    r = -sqrt( pc_lin*(2*k*sh)**2 )
+    r = -sqrt( pc_lin/exp(2*k*sh)**2 )
     eps = (1-r)**2/(1+r)**2
     
     return {'eps':eps, 'sh':sh}
