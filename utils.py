@@ -98,9 +98,8 @@ def plot_inline(a, frq=60e6, title=''):
     pt = a.pt.values.astype('float')[w]
     pc = a.pc.values.astype('float')[w]
     pn = a.pn.values.astype('float')[w]
-    inv = invert.spm(60e6, pc, pn)
-    eps = inv['eps']
-    sh = inv['sh']
+    eps = a.eps.values.astype('float')[w]
+    sh = a.sh.values.astype('float')[w]
     
     plt.figure(figsize=(15,10))
     
@@ -111,7 +110,6 @@ def plot_inline(a, frq=60e6, title=''):
     plt.xticks(size='10')
     plt.yticks(size='15')
     plt.title(title, size='15')
-    #plt.tick_params(labelbottom=False)
 
     ax_pwr = plt.subplot2grid((5,1), (1, 0), rowspan=2) # Signal components
     ax_pwr.fill_between(x, pc, pn, where=pc>=pn, facecolor='k', alpha=.05, interpolate=True)
@@ -123,7 +121,6 @@ def plot_inline(a, frq=60e6, title=''):
     plt.ylabel(r'Power $[dB]$', size=17)
     plt.yticks(size='15')
     plt.xticks(size='10')
-    #plt.tick_params(labelbottom=False)
     plt.legend(loc='lower right', fancybox=True).get_frame().set_alpha(0.5)
     
     ax_eps = plt.subplot2grid((5,1), (3, 0), rowspan=2) # Permittivity
