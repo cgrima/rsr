@@ -47,7 +47,7 @@ class Statfit:
                             density=True)
 
 
-    def yfunc(self, x=None, method='leastsq'):
+    def yfunc(self, x=None, method=None):
         """Compute coordinates for the theoretical fit
         Can change the x coordinates (initial by default)
         """
@@ -75,12 +75,12 @@ class Statfit:
 
 
     def plot(self, ylabel='Probability', color='k', alpha=.1,
-             method='compound', bins=None):
+             method='compound', bins=None, xlim=[0,1]):
         """Plot histogram and pdf
         """
         y, edges = self.histogram(bins=bins)
         width = np.array([abs(edges[i+1] - edges[i]) for i, val in enumerate(y)])
-        xplot = np.linspace(0,1,100)
+        xplot = np.linspace(xlim[0],xlim[1],100)
         yplot, xplot = self.yfunc(x=xplot, method=method)
         if ylabel is 'Occurences':
             factor = self.sample.size*width
@@ -96,7 +96,7 @@ class Statfit:
         plt.bar(edges[0:-1], y*factor, width=width,
                 color=color, edgecolor=color, alpha=alpha)
         plt.plot(xplot, yplot*factor2, color=color, linewidth=2)
-        plt.xlim((0,1))
+        plt.xlim(xlim)
         plt.ylabel(ylabel, size=17)
         plt.xlabel('Amplitude', size=17)
         plt.yticks(size='17')

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 
-def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
+def inline_estim(vec, myfunct='hk', inv='spm', winsize=1000., sampling=100.,
                  frq=60e6, save='.inline_estim_last', verbose=True, **kws):
     """Histogram statistical estimation over windows sliding along a vector
     
@@ -22,8 +22,8 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
     
     Keywords
     --------
-    stat : string
-        stat to use to estimate the histogram statistics (in fit.)
+    myfunct : string
+        pdf to use to estimate the histogram statistics (in fit.)
     inv : string
         inversion method (in invert.)
     winsize : int
@@ -57,8 +57,9 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
             ' (observations ' + str(xa[i]) + ':' + str(xb[i]) + ')')
             
         sample = vec[int(xa[i]):int(xb[i])]
-        param0 = getattr(fit, stat+'_param0')(sample[~np.isnan(sample)])
-        p = getattr(fit, stat)(sample[~np.isnan(sample)], param0=param0, kws=kws)
+	param0 = fit.param0(sample)
+	p = fit.lmfit(sample, myfunct=myfunct, kws=kws)
+        #p = getattr(fit, myfunct)(sample[~np.isnan(sample)], param0=param0, kws=kws)
         v = p.invert(frq=frq, method=inv)
         
         table.loc[i, 'pt'] = p.power()['pt']
@@ -78,7 +79,7 @@ def inline_estim(vec, stat='hk', inv='spm', winsize=1000., sampling=100.,
     print('DURATION: %4.1f min.' % (elapsed/60.))
 
     if save is not None:
-        ext = '.'+stat+'.'+inv
+        ext = '.'+myfunct+'.'+inv
         table.to_csv(save+ext+'.txt', sep='\t', index=False, float_format='%.3f')
 
     return table
@@ -145,24 +146,3 @@ def plot_inline(a, frq=60e6, title=''):
     ax_sh.set
     plt.legend(loc='upper right', fancybox=True).get_frame().set_alpha(0.5)
 
-
-def hk_pdf_sample(params, x):
-    """Generate a hk distribution with noise. Use it fit testing
-    
-    Arguments
-    ---------
-    params : dict
-        parameters for the HK function
-    x : sequence
-        x coordinates
-    """
-    # Extract parameters
-    a = params['s']
-    s = params['s']
-    mu = params['mu']
-    # Generate noisy hk distribution
-    x = np.linspace(0,1,100)
-    y = pdf.hk(params, x)
-    noise = np.random.normal(0,max(y)*.05,x.size)
-    sample = (y-noise) *((y-noise) >= 0)
-    return sample

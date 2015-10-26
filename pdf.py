@@ -6,7 +6,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 import math 
 import numpy as np
 from scipy import stats, integrate
-from scipy.special import jv, kv, j0, digamma
+from scipy.special import jv, kv, j0, i0, digamma
 
 
 
@@ -15,7 +15,9 @@ def gamma(params, x, data=None, eps=None):
     """
     # Initialisation
     mu = params['mu']
-    if hasattr(mu, 'value'): mu = mu.value #debug due to lmfit.minimize
+    # Debug inputs
+    if hasattr(mu, 'value'): mu = mu.value #idem
+    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
     # Model function
     model = stats.gamma.pdf(x, mu, scale = 1)
     model = np.nan_to_num(model)
@@ -33,6 +35,9 @@ def rayleigh(params, x, data=None, eps=None):
     """
     # Initialisation
     s = params['s']
+    # Debug inputs
+    if hasattr(s, 'value'): s = s.value #idem
+    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
     # Model function
     model = stats.rayleigh.pdf(x, scale = s)
     model = np.nan_to_num(model)
@@ -45,15 +50,20 @@ def rayleigh(params, x, data=None, eps=None):
 
 
 
-def rice(params, x, data=None, eps=None):
+def rice(params, x, data=None, eps=None, method = None):
     """Rice PDF from scipy with adequate variables
     """
     # Initialisation
     a = params['a']
     s = params['s']
+    # Debug inputs
+    if hasattr(a, 'value'): a = a.value #debug due to lmfit.minimize
+    if hasattr(s, 'value'): s = s.value #idem
+    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
     # Model function
     model = stats.rice.pdf(x, a/s, scale = s)
-    model = np.nan_to_num(model)
+    #model = (x/s**2) * np.exp(-(x**2+a**2)/(2*s**2)) * np.i0(a*x/s**2)
+    #model = np.nan_to_num(model)
 
     if data is None:
         return model
@@ -69,6 +79,11 @@ def k(params, x, data=None, eps=None):
     # Initialisation
     s = params['s']
     mu = params['mu']
+    # Debug inputs
+    if hasattr(s, 'value'): s = s.value #idem
+    if hasattr(mu, 'value'): mu = mu.value #idem
+    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
+
     # Model function
     b = np.sqrt(2*mu)/s
     model = 2*(x/2.)**mu *b**(mu+1.) /math.gamma(mu) *kv(mu-1,b*x)
@@ -82,7 +97,7 @@ def k(params, x, data=None, eps=None):
 
 
 
-def hk(params, x, data=None, eps=None, method = 'analytic', verbose=False):
+def hk(params, x, data=None, eps=None, method = 'analytic'):
     """Homodyne K-distribution from various methods
     
     Arguments
@@ -110,10 +125,10 @@ def hk(params, x, data=None, eps=None, method = 'analytic', verbose=False):
     a = params['a']
     s = params['s']
     mu = params['mu']
+    # Debug inputs
     if hasattr(a, 'value'): a = a.value #debug due to lmfit.minimize
     if hasattr(s, 'value'): s = s.value #idem
     if hasattr(mu, 'value'): mu = mu.value #idem
-    if verbose is True: print(a, s, mu)
     x = np.array([x]).flatten(0) # debug for iteration over 0-d element
     
     def integrand(w, x, a, s, mu, method=method):
@@ -131,27 +146,3 @@ def hk(params, x, data=None, eps=None, method = 'analytic', verbose=False):
     if eps is None:
         return (model - data) #residual
     return (model - data)/eps
-
-
-def hk_mpfit(p, fjac=None, x=None, y=None, err=None, method='analytic'):
-    """Homodyne K-distribution adapted for use of the mpfit.py package
-    
-    Arguments
-    ---------
-    p : sequence
-        params for the HK function in this order (a, s, mu)
-    
-    Keywords
-    --------
-    fjac : If None then partial derivatives should not be computed. It will
-        always be None if MPFIT is called with default flag.
-    x : sequence
-        x coordinates
-    y : sequence
-        data to compare the result with (for minimization)
-    err : sequence
-        error on the data
-    """
-    params = {'a':p[0],'s':p[1],'mu':p[2]}
-    print('!! Not implemented yet')
-    #return hk(params, x, data=y, eps=err, method=method)

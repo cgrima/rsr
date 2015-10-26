@@ -14,7 +14,7 @@ from scipy import optimize
 from Classdef import Statfit
 
 
-def hk_param0(sample, method='basic'):
+def param0(sample, method='basic'):
     """Estimate initial parameters for HK fitting
     
     Arguments
@@ -25,30 +25,32 @@ def hk_param0(sample, method='basic'):
     Keywords
     --------
     method : string
-        methodto compute the initial parameters
+        method to compute the initial parameters
     """
     if method is 'basic':
-        a0 = np.average(sample)
-        s0 = np.std(sample)
-        mu0 = 1.
-    return {'a0':a0, 's0':s0, 'mu0':mu0}
+        a = np.nanmean(sample)
+        s = np.nanstd(sample)
+        mu = 1.
+    return {'a':a, 's':s, 'mu':mu}
 
 
-def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=200,
-       range=(0,1), density=True, algo='lmfit', method='leastsq',
-       xtol=1e-4, ftol=1e-4, **kws):
-    """HK fit
+
+def lmfit(sample, myfunct='hk', x=None, p0 = None, bins=200, range=(0,1),
+          density=True, algo='lmfit', xtol=1e-4, ftol=1e-4, **kws):
+    """Lmfit
     
     Arguments
     ---------
     sample : sequence
-        if x not specified, sample should be amplitudes between 0 and 1.
+        amplitudes between 0 and 1.
     
     Keywords
     --------
+    myfunct : string
+        name of the function (in pdf module) to use for the fit
     x : sequence
         a vector if 'sample' is already the y coordinates of a distribution.
-    param0 : dict
+    p0 : dict
         Initial parameters.
     range : sequence
         x range considered for the fit.
@@ -59,73 +61,59 @@ def hk(sample, x=None, param0 = {'a0':.3, 's0':.04, 'mu0':5}, bins=200,
         the bin, normalized such that the integral over the range is 1.
     algo: string
         fit algorithm to use, whether 'lmfit' or 'mpfit'.
-    method : string
-        name of the optimization method (for lmfit algorithm onliy)
     kws : dict
-        keywords to be passed to the HK function
+        keywords to be passed to myfunct.
     """
     start = time.time()
 
+     # Rework sample
     sample = np.array(sample)
-    sample = sample[~np.isnan(sample)] # Remove NaN
-
+    sample = sample[~np.isnan(sample)]
+    
+    # Make the histogram
     if x is None: # Make the histogram
         y, edges = np.histogram(sample, bins=bins, range=range, density=density)
         x = edges[1:] - abs(edges[1]-edges[0])/2
     else:
         y = sample
 
-    ind = rm3zeros(y) #remove 0 if more than three consecutives
+    eps = y*.1 # Uncertainty on the y values
+
+     # Remove where y=0 if more than three consecutives. Will speed the fit up
+    ind = rm3zeros(y)
     y = y[ind]
     x = x[ind]
 
-    eps = y*.1 # Uncertainty [y*.05+mean(y)*.1]
+    # Initial Parameters
+    if p0 is None:
+        p0 = param0(sample) 
 
-    p0 = Parameters()
+    prm0 = Parameters()
     #     (Name,    Value,                 Vary,   Min,    Max,    Expr)
-    p0.add('a',     param0['a0'],          True,   0,      1,      None)
-    p0.add('s',     param0['s0'],          True,   0.001,  1,      None)
-    p0.add('mu',    param0['mu0'],         True,   0.1,    1000,   None)
-    p0.add('pt',    np.average(sample)**2, None,   0,      1,      'a**2+2*s**2')
+    prm0.add('a',     p0['a'],              True,   0,      1,    None)
+    prm0.add('s',     p0['s'],              True,   0.001,  1,    None)
+    prm0.add('mu',    p0['mu'],             True,   0.1,    1000, None)
+    prm0.add('pt',    np.average(sample)**2,None,   0,      1,    'a**2+2*s**2')
 
-    if algo is 'lmfit': # Fit
-        try: # use 'lbfgs' 'leastsq' error
-            p = minimize(pdf.hk, p0, args=(x, y), method=method,
-			 xtol=xtol, ftol=ftol, **kws)
-        except KeyboardInterrupt:
-            raise
-        except:
-            print('!! Error with %s fit, use L-BFGS-B instead' % (method))
-            p = minimize(pdf.hk, p0, args=(x, y), method='lbfgs', **kws)
-    if algo is 'mpfit':
-        print('!! Not implemented yet')
-        #p = hk_mpfit(p0, {'x':x, 'y':y, 'err':eps})
+    # Fit
+    pdf2use = getattr(pdf, myfunct)
+
+    try: # use 'lbfgs' if error with 'leastsq'
+        p = minimize(pdf2use, prm0, args=(x, y), method='leastsq',
+            xtol=xtol, ftol=ftol, **kws)
+    except KeyboardInterrupt:
+        raise
+    except:
+        print('!! Error with LEASTSQ fit, use L-BFGS-B instead')
+        p = minimize(pdf2use, prm0, args=(x, y), method='lbfgs', **kws)
     
+    # End
     elapsed = time.time() - start
     
     return Statfit(sample, p.userfcn, p.kws, range, bins, p.values, p.params,
                    p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
                    p.residual, y)
 
-
-def hk_mpfit(p0, functkw):
-    """HK fit with the mpfit algorithm
-    
-    Arguments
-    ---------
-    p0 : Parameters Class
-        from lmfit package
-    functkw : dict
-        {'x': x coordinates, 'y': y coordinates,'err': error}
-    """
-    par = [p0['a'].value, p0['s'].value, p0['mu'].value, p0['pt'].value]
-    parinfo = [
-        {'fixed': not int(p0['a']), 'limited': [0, 0], 'limits': [0.0, 0.0], 'value': 1.0},
-        {},
-        {},
-        {},
-        ]
-    return mpfit(pdf.hk_mpfit, par, parinfo=parinfo,functkw=functkw)
 
 
 def rm3zeros(vec):

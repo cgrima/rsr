@@ -7,7 +7,7 @@ from scipy import constants as ct
 
 
 def spm(frq, pc, pn):
-    """Use the Small Perturbation Model
+    """Use the Small Perturbation Model with large correlation length assumption
     
     Arguments
     ---------
