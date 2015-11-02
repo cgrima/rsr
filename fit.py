@@ -7,6 +7,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 import pdf
 import numpy as np
 import time
+import random
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 from scipy import optimize
@@ -61,12 +62,18 @@ def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
     A Statfit Class
     """
     start = time.time()
+    winsize = len(sample)
+    bad = False
 
     #--------------------------------------------------------------------------
     # Clean sample
     #--------------------------------------------------------------------------
     sample = np.array(sample)
     sample = sample[~np.isnan(sample)]
+    if len(sample) == 0:
+        bad = True
+        sample = [random.random() for r in np.arange(winsize)]
+
 
     #--------------------------------------------------------------------------
     # Make the histogram
@@ -109,9 +116,9 @@ def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
     #--------------------------------------------------------------------------
     elapsed = time.time() - start
 
-    #result = Statfit(sample, p.userfcn, p.kws, range, bins, p.values, p.params,
-    #         p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
-    #         p.residual, y)
+    # Identify bad results
+    if bad is True:
+        p.success = False
 
     result = Statfit(sample, p.userfcn, p.kws, p.values, p.params,
              p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
