@@ -62,14 +62,14 @@ class Statfit:
                        self.power()['pn'])
 
 
-    def plot(self, ylabel='Normalized Probability', color='k',
+    def plot(self, ylabel='Normalized Probability', color='k', fbins=100,
         alpha=.1, method='compound', histtype='stepfilled', xlim=None):
         """Plot histogram and pdf
         """
         if xlim is None:
             xlim = [np.min(self.edges), np.max(self.edges)]
 
-        x = np.linspace(xlim[0], xlim[1], 100)
+        x = np.linspace(xlim[0], xlim[1], fbins)
         hist(self.sample, bins=self.bins, color=color, edgecolor=color,
              alpha=alpha, histtype=histtype, normed=True, range=xlim)
         plt.plot(x, self.func(self.values, x, method=method), color=color,
