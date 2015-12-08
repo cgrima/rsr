@@ -123,7 +123,7 @@ def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
     # Create values dict For lmfit >0.9.0 compatibility since it is no longer
     # in the minimize output
     values = {}
-    for i in p.var_names:
+    for i in p.params.keys():
         values[i] = p.params[i].value
 
     # Results
