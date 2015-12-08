@@ -12,11 +12,10 @@ from astroML.plotting import hist
 class Statfit:
     """Class holding statistical fit results
     """
-    def __init__(self, sample, func, kws, values, params, chisqr, redchi,
+    def __init__(self, sample, func, values, params, chisqr, redchi,
                  elapsed, nfev, message, success, residual, x, n, edges, bins):
         self.sample = sample
         self.func = func
-        self.kws = kws
         self.values = values
         self.params = params
         self.chisqr = chisqr

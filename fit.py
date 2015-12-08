@@ -120,8 +120,19 @@ def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
     if bad is True:
         p.success = False
 
-    result = Statfit(sample, p.userfcn, p.kws, p.values, p.params,
+    # Create values dict For lmfit >0.9.0 compatibility since it is no longer
+    # in the minimize output
+    values = {}
+    for i in p.var_names:
+        values[i] = p.params[i].value
+
+    # Results
+    result = Statfit(sample, pdf2use, values, p.params,
              p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
              p.residual, x, n, edges, bins=bins)
+
+#    result = Statfit(sample, p.userfcn, p.kws, p.values, p.params,
+#             p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
+#             p.residual, x, n, edges, bins=bins)
 
     return result
