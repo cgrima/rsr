@@ -7,6 +7,7 @@ import pdf, fit, invert
 import matplotlib.pyplot as plt
 from scipy import interpolate, stats
 from astroML.plotting import hist
+import subradar as sr
 
 
 class Statfit:
@@ -54,11 +55,18 @@ class Statfit:
         return out
 
 
-    def invert(self, frq=60e6, method='spm'):
+    def invert(self, frq=60e6, th_max=.1, cl_logrange=[5], n=100,
+        method='iem', approx='Small_S', ):
         """Invert signal components into physical properties
         """
-        return getattr(invert, method)(frq, self.power()['pc'],
-                       self.power()['pn'])
+        if method is 'spm':
+            out =  getattr(invert, method)(frq, self.power()['pc'],
+                   self.power()['pn'])
+        if method is 'iem':
+            out = sr.invert.power2srf_norminc(method, approx,
+            self.power()['pc'], self.power()['pn'],
+            th_max=th_max, wf=frq, cl_logrange=cl_logrange, n=n)
+        return out
 
 
     def plot(self, ylabel='Normalized Probability', color='k', ls='-',
