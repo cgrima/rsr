@@ -55,7 +55,7 @@ class Statfit:
         return out
 
 
-    def invert(self, frq=60e6, th_max=.1, cl_logrange=[5], n=100,
+    def invert(self, frq=60e6, th_max=1-4, cl_logrange=[5], n=100,
         method='iem', approx='Small_S', ):
         """Invert signal components into physical properties
         """
