@@ -55,8 +55,8 @@ class Statfit:
         return out
 
 
-    def invert(self, frq=60e6, th_max=1e-4, cl_logrange=[5], n=100,
-        method='iem', approx='Small_S', ):
+    def invert(self, frq=60e6, th_max=1e-4, cl_logrange=[5], n=1e4,
+        ep_range=[1,100], method='iem', approx='Small_S', ):
         """Invert signal components into physical properties
         """
         if method is 'spm':
@@ -64,7 +64,7 @@ class Statfit:
                    self.power()['pn'])
         if method is 'iem':
             out = sr.invert.power2srf_norminc(method, approx,
-            self.power()['pc'], self.power()['pn'],
+            self.power()['pc'], self.power()['pn'], ep_range=ep_range,
             th_max=th_max, wf=frq, cl_logrange=cl_logrange, n=n)
         return out
 
