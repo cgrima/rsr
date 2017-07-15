@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 
 
 def inline_estim(vec, fit_model='hk', bins='knuth', inv='spm', winsize=1000.,
-                 sampling=100., frq=60e6, save='.inline_estim_last',
-                 verbose=True):
+                 sampling=250., frq=60e6, save='.inline_estim_last',
+                 verbose=True, **kwargs):
     """Histogram statistical estimation over windows sliding along a vector
 
     Arguments
@@ -45,7 +45,7 @@ def inline_estim(vec, fit_model='hk', bins='knuth', inv='spm', winsize=1000.,
     # Windows along-track
     #--------------------------------------------------------------------------
     x = np.arange(vec.size) #vector index
-    xa = x[:x.size-sampling/2.:sampling] #windows starting coordinate
+    xa = x[:x.size-winsize:sampling] #windows starting coordinate
     xb = xa + winsize-1 #window end coordinate
     if xb[-1] > x[-1]: xb[-1] = x[-1] #cut last window in limb
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
