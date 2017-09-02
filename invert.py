@@ -65,7 +65,6 @@ def bed_coeff(Psc=None, Psn=None, Pbc=None, Pbn=None, n1=None, sh=None, h0=None,
     Arguments must be energy in dB
     """
     L = sr.utils.geo_loss
-    wk = sr.utils.wf2wk(wf)
 
     Rsc, Rsn = srf_coeff(Psc=Psc, Psn=Psn, h0=h0, wb=wb)
 
