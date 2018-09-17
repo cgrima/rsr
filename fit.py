@@ -11,8 +11,6 @@ import random
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 from scipy import optimize
-from astroML.plotting import hist
-
 
 def param0(sample, method='basic'):
     """Estimate initial parameters for HK fitting
@@ -34,7 +32,7 @@ def param0(sample, method='basic'):
     return {'a':a, 's':s, 'mu':mu}
 
 
-def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
+def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
           xtol=1e-4, ftol=1e-4):
     """Lmfit
 
@@ -48,7 +46,7 @@ def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
     fit_model : string
         name of the function (in pdf module) to use for the fit
     bins : string
-        method to compute the bin width (inherited from astroML.plotting.hist)
+        method to compute the bin width (inherited from numpy.histogram)
     p0 : dict
         Initial parameters. If None, estimated automatically.
     xtol : float
@@ -77,7 +75,8 @@ def lmfit(sample, fit_model='hk', bins='knuth', p0 = None,
     #--------------------------------------------------------------------------
     # Make the histogram
     #--------------------------------------------------------------------------
-    n, edges, patches = hist(sample, bins=bins, normed=True)
+#    n, edges, patches = hist(sample, bins=bins, normed=True)
+    n, edges = np.histogram(sample, bins=bins, normed=True)
     plt.clf()
 
     x = ((np.roll(edges, -1) + edges)/2.)[0:-1]
