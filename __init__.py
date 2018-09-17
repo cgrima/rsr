@@ -1,11 +1,7 @@
-"""Various radar tools and utilities
+"""Tools and utilities for running the Radar Statistical Reconnaissance
 """
+__author__ = "Cyril Grima"
 
-__author__ = 'Cyril Grima'
+__all__ = ["fit", "invert", "pdf", "utils"]
 
-__all__ = ['fit', 'invert', 'pdf', 'utils']
-
-import fit
-import invert
-import pdf
-import utils
+from . import fit, invert, pdf, utils

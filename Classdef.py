@@ -1,9 +1,10 @@
 """Various python classes for rsr package
-Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import numpy as np
-import pdf, fit, invert
+#from . import pdf
+#from . import fit
+from . import invert
 import matplotlib.pyplot as plt
 from scipy import interpolate, stats
 from astroML.plotting import hist

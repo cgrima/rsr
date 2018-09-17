@@ -4,7 +4,9 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import numpy as np
-import pdf, fit, invert
+from . import pdf
+from . import fit
+from . import invert
 import time
 from pandas import DataFrame
 import matplotlib.pyplot as plt

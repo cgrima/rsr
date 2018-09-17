@@ -1,17 +1,16 @@
 """
 Various tools for extracting signal components from a fit of the amplitude
 distribution
-Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
-import pdf
+from . import pdf
+from .Classdef import Statfit
 import numpy as np
 import time
 import random
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 from scipy import optimize
-from Classdef import Statfit
 from astroML.plotting import hist
 
 
