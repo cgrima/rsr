@@ -12,7 +12,7 @@ from pandas import DataFrame
 import matplotlib.pyplot as plt
 
 
-def inline_estim(vec, fit_model='hk', bins='knuth', inv='spm', winsize=1000.,
+def inline_estim(vec, fit_model='hk', bins='auto', inv='spm', winsize=1000.,
                  sampling=250., frq=60e6, save='.inline_estim_last',
                  verbose=True, **kwargs):
     """Histogram statistical estimation over windows sliding along a vector
@@ -95,6 +95,11 @@ def inline_estim(vec, fit_model='hk', bins='knuth', inv='spm', winsize=1000.,
     if save is not None:
         ext = '.'+fit_model+'.'+inv
         table.to_csv(save+ext+'.txt', sep='\t', index=False, float_format='%.3f')
+
+    # Convert x coordinates to integers
+    table['xa'] = table['xa'].astype(np.int64)
+    table['xo'] = table['xo'].astype(np.int64)
+    table['xb'] = table['xb'].astype(np.int64)
 
     return table
 

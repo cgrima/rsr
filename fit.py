@@ -10,7 +10,6 @@ import time
 import random
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
-from scipy import optimize
 
 def param0(sample, method='basic'):
     """Estimate initial parameters for HK fitting

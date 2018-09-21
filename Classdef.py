@@ -2,11 +2,8 @@
 """
 
 import numpy as np
-#from . import pdf
-#from . import fit
 from . import invert
 import matplotlib.pyplot as plt
-from scipy import interpolate, stats
 import subradar as sr
 
 
