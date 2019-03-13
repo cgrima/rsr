@@ -75,7 +75,7 @@ def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
     # Make the histogram
     #--------------------------------------------------------------------------
 #    n, edges, patches = hist(sample, bins=bins, normed=True)
-    n, edges = np.histogram(sample, bins=bins, normed=True)
+    n, edges = np.histogram(sample, bins=bins, density=True)
     plt.clf()
 
     x = ((np.roll(edges, -1) + edges)/2.)[0:-1]
