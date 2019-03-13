@@ -3,7 +3,7 @@ Probability density functions compliant with the lmfit package
 Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
-import math 
+import math
 import numpy as np
 from scipy import stats, integrate
 from scipy.special import jv, kv, j0, i0, digamma
@@ -99,14 +99,14 @@ def k(params, x, data=None, eps=None):
 
 def hk(params, x, data=None, eps=None, method = 'analytic'):
     """Homodyne K-distribution from various methods
-    
+
     Arguments
     ---------
     params : dict
         params for the hk function {'a', 's', 'mu'}
     x : sequence
         x coordinates
-    
+
     Keywords
     --------
     data : sequence
@@ -130,17 +130,17 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     if hasattr(s, 'value'): s = s.value #idem
     if hasattr(mu, 'value'): mu = mu.value #idem
     x = np.array([x]).flatten(0) # debug for iteration over 0-d element
-    
+
     def integrand(w, x, a, s, mu, method=method):
         if method == 'analytic':
             return x*w*j0(w*a)*j0(w*x)*(1. +w**2*s**2/(2.*mu))**-mu
         if method == 'compound':
             return rice({'a':a,'s':s*np.sqrt(w/mu)}, x) * gamma({'mu':mu}, w)
-            
-    model = [integrate.quad(integrand, 0., np.inf, args=(i, a, s, mu, method))[0] 
+
+    model = [integrate.quad(integrand, 0., np.inf, args=(i, a, s, mu, method), full_output=1)[0]
              for i in x] # Integration
     model = np.array(model)
-    
+
     if data is None:
         return model
     if eps is None:
