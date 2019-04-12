@@ -3,8 +3,9 @@ Wrappers for running RSR processing
 """
 
 from . import fit
-
 import numpy as np
+import pandas as pd
+import multiprocessing
 
 
 def timing(func):
@@ -47,7 +48,8 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     scaling: boolean
         Whether to scale the amplitudes before processing.
         That ensures a correct fit in case the amplitudes are << 1
-
+    output: string
+        Format of the output
     Return
     ------
     A Statfit class
@@ -66,6 +68,11 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     a.sample = amp/scale_amp
     a.values['a'] = np.sqrt( 10**(pc/10.) )
     a.values['s'] = np.sqrt( 10**(pn/10.)/2. )
+
+    # Output
+    try: ID
+    except NameError: ID = -1
+    a.values['ID'] = ID
 
     return a
 
@@ -99,7 +106,58 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
 
     out = {'xa':np.array(xa, dtype=np.int64),
            'xb':np.array(xb, dtype=np.int64),
-           'xo':np.array(xo, dtype=np.float64)}
+           'xo':np.array(xo, dtype=np.float64),
+           }
+
+    return out
+
+
+def inline(amp, nbcores=1, verbose=True, **kwargs):
+    """
+    RSR applied on windows sliding along a vector of amplitudes
+
+    Arguments
+    ---------
+    amp: Float array
+        A vector of amplitudes
+
+    Keywords
+    --------
+    nbcores: int
+        number of cores
+    verbose: boolean
+        print results
+    Any keywords accepted by 'processor' and 'frames'
+
+    Return
+    ------
+
+    """
+    # Windows along-track
+    x = np.arange(amp.size) #vector index
+    w = frames(x, **kwargs)
+    ID = np.arange(w['xa'].size)
+
+    # Jobs Definition
+    args, kwgs = [], []
+    for i in ID:
+        args.append( amp[w['xa'][i]: w['xb'][i]] )
+        kwgs.append( dict(**kwargs, ID=w['xo'][i])  )
+
+    # Processing
+    pool = multiprocessing.Pool(nbcores)
+    results = [pool.apply_async(processor, (args[i],), kwgs[i]) for i in ID]
+    pool.close()
+    pool.join()
+
+    # Sorting Results
+    out = pd.DataFrame()
+    for i in results:
+        a = i.get()
+        b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+        out = out.append(b, ignore_index=True)
+
+    out = out.sort_values('ID')
 
     return out
 
