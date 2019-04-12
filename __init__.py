@@ -2,6 +2,6 @@
 """
 __author__ = "Cyril Grima"
 
-__all__ = ["fit", "invert", "pdf", "utils"]
+__all__ = ["fit", "invert", "pdf", "run", "utils"]
 
-from . import fit, invert, pdf, utils
+from . import fit, invert, pdf, run, utils
