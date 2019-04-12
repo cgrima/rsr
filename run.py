@@ -97,5 +97,9 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
     # Output
     out = [ np.array([xa[i], xb[i]]).astype('int64') for i in np.arange(xa.size)  ]
 
+    out = {'xa':np.array(xa, dtype=np.int64),
+           'xb':np.array(xb, dtype=np.int64),
+           'xo':np.array(xo, dtype=np.float64)}
+
     return out
 
