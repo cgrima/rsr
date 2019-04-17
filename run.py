@@ -3,9 +3,10 @@ Wrappers for running RSR processing
 """
 
 from . import fit
+from .Classdef import Async
 import numpy as np
 import pandas as pd
-import multiprocessing
+import time
 
 
 def timing(func):
@@ -54,6 +55,7 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     ------
     A Statfit class
     """
+
     # Gain and Scaling
     amp = amp * 10**(gain/20.)
     scale_amp = scale(amp) if scaling is True else 1
@@ -70,10 +72,27 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     a.values['s'] = np.sqrt( 10**(pn/10.)/2. )
 
     # Output
-    try: ID
-    except NameError: ID = -1
-    a.values['ID'] = ID
+    if 'ID' in kwargs:
+        a.values['ID'] = kwargs['ID']
+    else:
+        a.values['ID'] = -1
 
+    return a
+
+
+def cb_processor(a):
+    """
+    Callback function for processor
+
+    Argument:
+    ---------
+    a: class
+        Results from "processor" (Statfit class)
+    """
+    p = a.power()
+    #print(p)
+    print("#%d\tCorrelation: %.3f\tPt: %.1f dB   Pc: %.1f dB   Pn: %.1f dB" %
+            (a.values['ID'], a.crl(), p['pt'], p['pc'], p['pn'] ) )
     return a
 
 
@@ -111,7 +130,7 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
 
     return out
 
-
+#@timing
 def inline(amp, nbcores=1, verbose=True, **kwargs):
     """
     RSR applied on windows sliding along a vector of amplitudes
@@ -133,6 +152,10 @@ def inline(amp, nbcores=1, verbose=True, **kwargs):
     ------
 
     """
+    #-----------
+    # Parameters
+    #-----------
+
     # Windows along-track
     x = np.arange(amp.size) #vector index
     w = frames(x, **kwargs)
@@ -142,22 +165,45 @@ def inline(amp, nbcores=1, verbose=True, **kwargs):
     args, kwgs = [], []
     for i in ID:
         args.append( amp[w['xa'][i]: w['xb'][i]] )
-        kwgs.append( dict(**kwargs, ID=w['xo'][i])  )
+        #kwgs.append( dict(**kwargs, i=w['xo'][i])  )
 
+    #-----------
     # Processing
-    pool = multiprocessing.Pool(nbcores)
-    results = [pool.apply_async(processor, (args[i],), kwgs[i]) for i in ID]
-    pool.close()
-    pool.join()
+    #-----------
 
-    # Sorting Results
-    out = pd.DataFrame()
-    for i in results:
-        a = i.get()
-        b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-        out = out.append(b, ignore_index=True)
+    # Do NOT use the multiprocessing package
+    if nbcores== -1:
+        results = pd.DataFrame()
+        for i in ID:
+            a = processor(args[i], **kwargs, ID=w['xo'][i])
+            cb_processor(a)
+            b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+            results = results.append(b, ignore_index=True)
+        out = results
 
-    out = out.sort_values('ID')
+    # Do use the multiprocessing package
+    if nbcores > 0:
+        results = []
+        if verbose is True:
+            async_inline = Async(processor, cb_processor, nbcores=nbcores)
+        elif verbose is False:
+            async_inline = Async(processor, None, nbcores=nbcores)
+
+        for i in ID:
+            results.append( async_inline.call(args[i], **kwargs, ID=w['xo'][i]) )
+        async_inline.wait()
+        # Sorting Results
+        out = pd.DataFrame()
+        for i in results:
+            a = i.get()
+            b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+            out = out.append(b, ignore_index=True)
+        out = out.sort_values('ID')
+
+        out['xa'] = w['xa']
+        out['xb'] = w['xb']
+        out['xo'] = w['xo']
+        out = out.drop('ID', 1)
 
     return out
 
