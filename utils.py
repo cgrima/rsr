@@ -176,3 +176,50 @@ def plot_inline(a, frq=60e6, title=''):
     ax_sh.set_yticklabels(['0.01', '0.1', '1'])
     ax_sh.set
     plt.legend(loc='upper right', fancybox=True).get_frame().set_alpha(0.5)
+
+
+def plot_along(a, title=''):
+    """Plot infos from a DataFrame created by run.along
+
+    Arguments
+    ---------
+    a : Pandas DataFrame
+        run.along output
+    """
+    f, ax = plt.subplots(2, figsize=(16, 16), dpi= 80, )#wspace=0, hspace=0)
+
+    x = a['xo'].values
+    pc = a['pc'].values
+    pn = a['pn'].values
+    crl = a['crl'].values
+    chisqr = a['chisqr'].values
+
+    for i in ax[1:2]:
+        i.grid()
+        i.xaxis.label.set_size(15)
+        i.yaxis.label.set_size(15)
+        i.tick_params(labelsize=15)
+        i.title.set_size(20)
+
+    ax[0].plot(x, pc, 'k', lw=3, label='$P_c$')
+    ax[0].plot(x, pn, '.6', lw=3, label='$P_n$')
+    ax[0].fill_between(x, pc, pn, where=pc >= pn, alpha=.2, label='Dominantly Specular')
+    ax[0].fill_between(x, pc, pn, where=pc <= pn, alpha=.2, label='Dominatly Diffuse')
+    ax[0].set_title('RSR-derived Coherent and Incoherent Energies', fontweight="bold", fontsize=20)
+    ax[0].set_ylabel('$[dB]$')
+    ax[0].set_xlim(0, x.max())
+    ax[0].legend(loc=3, ncol=2, fontsize='large')
+
+    ax_chisqr = ax[1].twinx()
+    ax_chisqr.plot(x, chisqr, '.6', lw=3)
+    ax_chisqr.set_ylabel('Chi-square', color='.6')
+    ax_chisqr.yaxis.label.set_size(15)
+    ax_chisqr.tick_params(labelsize=15)
+
+    ax[1].plot(x, crl, 'k', lw=3)
+    ax[1].set_title('Quality Metrics', fontweight="bold", fontsize=20)
+    ax[1].set_ylabel('Correlation Coefficient')
+    ax[1].set_xlim(0, x.max())
+    ax[1].set_ylim(0, 1.1)
+    ax[1].legend(loc=3, ncol=2, fontsize='large')
+    ax[1].set_xlabel('Bin #')

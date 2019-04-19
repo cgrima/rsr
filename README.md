@@ -5,14 +5,14 @@ This is a Python package providing basic utilities for applying the Radar Statis
 
 # Requirements
 
+
 numpy > 1.11.0
+
 
 
 # Example
 
-The signal is assumed to be calibrated, so that the amplitude received from a perfect flat mirror would be unity.
 
-Note: the data stored in the data.txtfile are powers in dB
 
 
 ```python
@@ -22,24 +22,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 %pylab
 
-# Unit conversion (dB powers to linear amplitudes)
-pdb = np.loadtxt('rsr/data.txt')
-amp = 10**(pdb/20.)
+# Load data (example is non-calibrated surface echo linear amplitudes from SHARAD orbit 0887601)
+data = np.genfromtxt('rsr/data.txt', dtype=float, delimiter=',', names=True)
+amp = data['amp']
 
 # Apply RSR to a given subset of amplitude.
-# RSR processing with Homodyned K-distribution fitting.
 sample = amp[80000:85000]
-f = rsr.fit.lmfit(sample, fit_model='hk')
-f.report() # Display result
+f = rsr.run.processor(sample, fit_model='hk')
 f.plot() # Plot results
 
 # Apply RSR along a vector of successive amplitude.
 # The RSR is applied on windows made of 1000 values. Each window is separated by
 # 500 samples (can be time consuming).
-b2 = rsr.utils.inline_estim(amp, winsize=1000, sampling=250)
-rsr.utils.plot_inline(b2) # Plot results
-
+a = rsr.utils.inline_estim(amp, winsize=1000, sampling=250)
+rsr.utils.plot_along(a) # Plot results
 ```
+
+
 
 
 # Citation

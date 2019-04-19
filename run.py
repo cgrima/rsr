@@ -131,7 +131,7 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
     return out
 
 #@timing
-def inline(amp, nbcores=1, verbose=True, **kwargs):
+def along(amp, nbcores=1, verbose=True, **kwargs):
     """
     RSR applied on windows sliding along a vector of amplitudes
 
@@ -152,12 +152,14 @@ def inline(amp, nbcores=1, verbose=True, **kwargs):
     ------
 
     """
+    t1 = time.time()
+
     #-----------
     # Parameters
     #-----------
 
     # Windows along-track
-    x = np.arange(amp.size) #vector index
+    x = np.arange( len(amp) ) #vector index
     w = frames(x, **kwargs)
     ID = np.arange(w['xa'].size)
 
@@ -204,6 +206,10 @@ def inline(amp, nbcores=1, verbose=True, **kwargs):
         out['xb'] = w['xb']
         out['xo'] = w['xo']
         out = out.drop('ID', 1)
+
+        t2 = time.time()
+        if verbose is True:
+            print("- Processed in %.1f s.\n" % (t2-t1))
 
     return out
 
