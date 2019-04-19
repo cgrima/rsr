@@ -34,7 +34,7 @@ f.plot() # Plot results
 # Apply RSR along a vector of successive amplitude.
 # The RSR is applied on windows made of 1000 values. Each window is separated by
 # 500 samples (can be time consuming).
-a = rsr.utils.inline_estim(amp, winsize=1000, sampling=250)
+a = rsr.run.along(amp, winsize=1000, sampling=250, nbcores=2)
 rsr.utils.plot_along(a) # Plot results
 ```
 
