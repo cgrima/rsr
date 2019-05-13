@@ -56,6 +56,7 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     A Statfit class
     """
     # Gain and Scaling
+    amp = amp[amp != 0] #Remove zero values
     amp = amp * 10**(gain/20.)
     scale_amp = scale(amp) if scaling is True else 1
     amp = amp*scale_amp

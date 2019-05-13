@@ -66,7 +66,6 @@ def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
     #--------------------------------------------------------------------------
     sample = np.array(sample)
     sample = sample[~np.isnan(sample)]
-    sample = sample[sample != 0]
     if len(sample) == 0:
         bad = True
         sample = [random.random() for r in np.arange(winsize)]
