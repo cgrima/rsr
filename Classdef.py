@@ -37,6 +37,9 @@ class Statfit:
                      2*self.values['s']**2
         if db is True:
             pt, pc, pn = 10*np.log10(pt), 10*np.log10(pc), 10*np.log10(pn)
+        pt = 0 if self.success is False else pt
+        pc = 0 if self.success is False else pc
+        pn = 0 if self.success is False else pn
         return {'pt':pt, 'pc':pc, 'pn':pn, 'pc-pn':pc-pn}
 
 
@@ -46,10 +49,10 @@ class Statfit:
         try:
             out = np.corrcoef(self.n, self.n+self.residual)[0,1]
         except:
-            out = np.nan
+            out = 0.
 
-        if np.isfinite(out) is False:
-            out = np.nan
+        if np.isfinite(out) is False or self.success is False:
+            out = 0.
         return out
 
 

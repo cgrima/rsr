@@ -65,10 +65,10 @@ def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
     # Clean sample
     #--------------------------------------------------------------------------
     sample = np.array(sample)
-    sample = sample[~np.isnan(sample)]
+    sample = sample[np.isfinite(sample)]
     if len(sample) == 0:
         bad = True
-        sample = [random.random() for r in np.arange(winsize)]
+        sample = np.zeros(10)+1
 
 
     #--------------------------------------------------------------------------
@@ -113,13 +113,10 @@ def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
     #--------------------------------------------------------------------------
     elapsed = time.time() - start
 
-    # Identify bad results
-    if bad is True:
-        p.success = False
+    values = {}
 
     # Create values dict For lmfit >0.9.0 compatibility since it is no longer
     # in the minimize output
-    values = {}
     for i in p.params.keys():
         values[i] = p.params[i].value
 
@@ -128,8 +125,16 @@ def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
              p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
              p.residual, x, n, edges, bins=bins)
 
-#    result = Statfit(sample, p.userfcn, p.kws, p.values, p.params,
-#             p.chisqr, p.redchi, elapsed, p.nfev, p.message, p.success,
-#             p.residual, x, n, edges, bins=bins)
+    # Identify bad results
+    if bad is True:
+        result.success = False
+        result.values['a'] = 0
+        result.values['s'] = 0
+        result.values['mu'] = 0
+        result.values['pt'] = 0
+        result.chisqr = 0
+        result.redchi = 0
+        result.message = 'No valid data in the sample'
+        result.residual = 0
 
     return result
