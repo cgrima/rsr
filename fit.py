@@ -8,6 +8,8 @@ from .Classdef import Statfit
 import numpy as np
 import time
 import random
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 
