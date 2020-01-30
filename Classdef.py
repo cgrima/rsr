@@ -100,10 +100,10 @@ class Statfit:
 
         add('%s\n' % (self.message))
 
-        for i, key in enumerate(self.values.keys()):
-            add('%s = %.3e, ' % (key, self.params[key].value))
+        #for i, key in enumerate(self.values.keys()):
+        #    add('%s = %.3e, ' % (key, self.params[key].value))
 
-        add('\n')
+        #add('\n')
 
         for i, key in enumerate(self.power().keys()):
             add('%s = %3.1f dB, ' % (key, self.power()[key]))
