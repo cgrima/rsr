@@ -219,7 +219,7 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
 
 #@timing
 def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
-              deg=True, nbcores=1, verbose=True, **kwargs):
+              nbcores=1, verbose=True, **kwargs):
     """
     RSR applied over data within circles
 
@@ -237,16 +237,15 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
         Y_coordinates for circles
     circle_r: Float
         Radius of the circles
-    deg: boolean (default: True)
-        set to True if coordinates are latitude/longitudes in degree. The
-        algo will then use the Haversine metrics to compute distances
-        between points. If False, use the Euclidian metrics.
     leaf_size: Integer (Default: None)
         Set the leaf size for the KD-Tree. Inherits from sklearn.
         If None, use a brute force technique
 
     Keywords
     --------
+    leaf_size: Integer (Default: None)
+        Set the leaf size for the KD-Tree. Inherits from sklearn.
+        If None, use a brute force technique
     nbcores: int
         number of cores
     verbose: boolean
@@ -283,7 +282,7 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
     # Radius Query
     circle_xy = np.array(list(zip(circle_x, circle_y)))
     ind = tree.query_radius(circle_xy, r=circle_r)
-    print([len(i) for i in ind])
+    
     # Jobs Definition
     ID, args, kwgs = [], [], []
     for i, data_index in enumerate(ind):
