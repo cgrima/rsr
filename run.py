@@ -7,6 +7,8 @@ from .Classdef import Async
 import numpy as np
 import pandas as pd
 import time
+from sklearn.neighbors import KDTree
+
 
 def timing(func):
     """Outputs the time a function takes to execute.
@@ -214,3 +216,123 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
 
     return out
 
+
+#@timing
+def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
+              deg=True, nbcores=1, verbose=True, **kwargs):
+    """
+    RSR applied over data within circles
+
+    Arguments
+    ---------
+    amp: Float array
+        A vector of amplitudes
+    amp_x: Float array
+        X coordinates for amp
+    amp_y: Float array
+        Y coordinates for amp
+    circle_x: Float array
+        X coordinates for circles
+    circle_y: Float array
+        Y_coordinates for circles
+    circle_r: Float
+        Radius of the circles
+    deg: boolean (default: True)
+        set to True if coordinates are latitude/longitudes in degree. The
+        algo will then use the Haversine metrics to compute distances
+        between points. If False, use the Euclidian metrics.
+    leaf_size: Integer (Default: None)
+        Set the leaf size for the KD-Tree. Inherits from sklearn.
+        If None, use a brute force technique
+
+    Keywords
+    --------
+    nbcores: int
+        number of cores
+    verbose: boolean
+        print results
+    Any keywords accepted by 'processor' and 'frames'
+
+    Return
+    ------
+
+    """
+    t1 = time.time()
+
+    #-----------
+    # Parameters
+    #-----------
+
+    # Coordinates units
+    #if deg is True:
+    #    metrics = 'haversine'
+    #    amp_x = np.deg2rad(amp_x)
+    #    amp_y = np.deg2rad(amp_y)
+    #    circle_x = np.deg2rad(circle_x)
+    #    circle_y = np.deg2rad(circle_y)
+    #    circle_r = np.deg2rad(circle_r)
+    #else:
+    #    metrics = 'euclidian'
+
+    # KD-Tree
+    if leaf_size is None:
+        leaf_size = len(amp)
+    amp_xy = np.array(list(zip(amp_x, amp_y)))
+    tree = KDTree(amp_xy, leaf_size=leaf_size)
+
+    # Radius Query
+    circle_xy = np.array(list(zip(circle_x, circle_y)))
+    ind = tree.query_radius(circle_xy, r=circle_r)
+    print([len(i) for i in ind])
+    # Jobs Definition
+    ID, args, kwgs = [], [], []
+    for i, data_index in enumerate(ind):
+        if data_index.size != 0:
+            data = np.take(amp, data_index)
+            args.append(data)
+            ID.append(i)
+        #kwgs.append( dict(**kwargs, i=w['xo'][i])  )
+
+    #-----------
+    # Processing
+    #-----------
+
+    # Do NOT use the multiprocessing package
+    if nbcores == -1:
+        results = pd.DataFrame()
+        for i, orig_i in enumerate(ID):
+            a = processor(args[i], **kwargs, ID=orig_i)
+            cb_processor(a)
+            b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+            results = results.append(b, ignore_index=True)
+        out = results
+
+    # Do use the multiprocessing package
+    if nbcores > 0:
+        results = []
+        if verbose is True:
+            async_inline = Async(processor, cb_processor, nbcores=nbcores)
+        elif verbose is False:
+            async_inline = Async(processor, None, nbcores=nbcores)
+
+        for i, orig_i in enumerate(ID):
+            results.append( async_inline.call(args[i], **kwargs, ID=orig_i) )
+        async_inline.wait()
+        # Sorting Results
+        out = pd.DataFrame()
+        for i in results:
+            a = i.get()
+            b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+            out = out.append(b, ignore_index=True)
+        out = out.sort_values('ID')
+
+        #out['xa'] = w['xa']
+        #out['xb'] = w['xb']
+        #out['xo'] = w['xo']
+        #out = out.drop('ID', 1)
+
+        t2 = time.time()
+        if verbose is True:
+            print("- Processed in %.1f s.\n" % (t2-t1))
+
+    return out
