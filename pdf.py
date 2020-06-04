@@ -129,7 +129,7 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     if hasattr(a, 'value'): a = a.value #debug due to lmfit.minimize
     if hasattr(s, 'value'): s = s.value #idem
     if hasattr(mu, 'value'): mu = mu.value #idem
-    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
+    x = np.array([x]).flatten('C') # debug for iteration over 0-d element
 
     def integrand_analytic(w, x, a, s, mu):
         return x*w*j0(w*a)*j0(w*x)*(1. +w*w*s*s/(2.*mu))**-mu
