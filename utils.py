@@ -223,3 +223,37 @@ def plot_along(a, title=''):
     ax[1].set_ylim(0, 1.1)
     ax[1].legend(loc=3, ncol=2, fontsize='large')
     ax[1].set_xlabel('Bin #')
+
+
+def grid_coordinates(r, xlim, ylim, shape='square'):
+    """Provides point coordinates agenced within a pattern
+
+    Arguments
+    ---------
+    r : Integer
+        Spacing between two consecutive points
+
+    xlim : (float, float)
+           Minimum and maximum values of x coordinates
+
+    ylim : (float, float)
+           Minimum and maximum values of y coordinates
+
+    shape : String
+            Shape of the grid mesh. If 'hexagonal', r define the x spacing
+
+    """
+    if shape == 'square':
+        dx = r
+	dy = r
+    if shape == 'hexagonal':
+        dx = r
+	dy = np.sqrt(3)*dx/2.
+    x = np.arange(xlim[0], xlim[1], dx)
+    y = np.arange(ylim[0], ylim[1], dy)
+    X, Y = np.meshgrid(x, y)
+    if shape == 'hexagonal':
+        X[::2] = X[::2] + dx/2.
+
+    return X.flatten(), Y.flatten()
+
