@@ -245,10 +245,10 @@ def grid_coordinates(r, xlim, ylim, shape='square'):
     """
     if shape == 'square':
         dx = r
-	dy = r
+        dy = r
     if shape == 'hexagonal':
         dx = r
-	dy = np.sqrt(3)*dx/2.
+        dy = np.sqrt(3)*dx/2.
     x = np.arange(xlim[0], xlim[1], dx)
     y = np.arange(ylim[0], ylim[1], dy)
     X, Y = np.meshgrid(x, y)
