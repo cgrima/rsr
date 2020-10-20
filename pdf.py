@@ -17,7 +17,7 @@ def gamma(params, x, data=None, eps=None):
     mu = params['mu']
     # Debug inputs
     if hasattr(mu, 'value'): mu = mu.value #idem
-    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
+    x = np.array([x]).flatten('C') # debug for iteration over 0-d element
     # Model function
     model = stats.gamma.pdf(x, mu, scale = 1)
     model = np.nan_to_num(model)
@@ -37,7 +37,7 @@ def rayleigh(params, x, data=None, eps=None):
     s = params['s']
     # Debug inputs
     if hasattr(s, 'value'): s = s.value #idem
-    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
+    x = np.array([x]).flatten('C') # debug for iteration over 0-d element
     # Model function
     model = stats.rayleigh.pdf(x, scale = s)
     model = np.nan_to_num(model)
@@ -59,7 +59,7 @@ def rice(params, x, data=None, eps=None, method = None):
     # Debug inputs
     if hasattr(a, 'value'): a = a.value #debug due to lmfit.minimize
     if hasattr(s, 'value'): s = s.value #idem
-    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
+    x = np.array([x]).flatten('C') # debug for iteration over 0-d element
     # Model function
     model = stats.rice.pdf(x, a/s, scale = s)
     #model = (x/s**2) * np.exp(-(x**2+a**2)/(2*s**2)) * np.i0(a*x/s**2)
@@ -82,7 +82,7 @@ def k(params, x, data=None, eps=None):
     # Debug inputs
     if hasattr(s, 'value'): s = s.value #idem
     if hasattr(mu, 'value'): mu = mu.value #idem
-    x = np.array([x]).flatten(0) # debug for iteration over 0-d element
+    x = np.array([x]).flatten('C') # debug for iteration over 0-d element
 
     # Model function
     b = np.sqrt(2*mu)/s
