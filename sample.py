@@ -77,4 +77,4 @@ def pdf(func, params, method=None, **kwargs):
         f = lambda x: getattr(funcs, func)(params, x,)
     else:
         f = lambda x: getattr(funcs, func)(params, x, method=method)
-    return sample(f, N=1000)
+    return sample(f, **kwargs)
