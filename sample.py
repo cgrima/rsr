@@ -31,7 +31,7 @@ def inverse_cdf(f, xN=1e3, xlim=(0,1), **kwargs):
     return scipy.interpolate.interp1d(cdf,x)
 
 
-def sample(f, N=1e3, xN=1e3, xlim=(0,1), **kwargs):
+def sample(f, N=1e3, xN=1e3, xlim=(0,1), precision=None, **kwargs):
     """Provides a random trial X over a given PDF following the Inverse 
     Transform Sampling technique so that X=F^{-1}(U), where F^{-1} is the 
     inverse cumulative distribution function of the PDF and U is a random 
@@ -47,6 +47,8 @@ def sample(f, N=1e3, xN=1e3, xlim=(0,1), **kwargs):
         The x-axis sampling of the PDF
     xlim : (integer, integer)
         The x-axis range overwhich the pdf is considered
+    precision : float
+        precision on the measurement [dB]
         
     RETURN
     ------
@@ -54,6 +56,13 @@ def sample(f, N=1e3, xN=1e3, xlim=(0,1), **kwargs):
     """
     uniform_samples = np.random.random(int(N))
     required_samples = inverse_cdf(f, xN=xN, xlim=xlim)(uniform_samples)
+
+    if precision:
+        for i, sample in enumerate(required_samples):
+            linear_precision = np.abs(10**(precision/2/20) - 
+                                      10**(-precision/2/20))*sample
+            required_samples[i] = np.random.normal(sample, linear_precision)
+    
     return required_samples
 
 
