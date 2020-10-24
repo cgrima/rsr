@@ -70,9 +70,9 @@ class Statfit:
         return out
 
 
-    def plot(self, ylabel='Normalized Probability', color='k', ls='-',
-        bins=None, fbins=100, alpha=.1, method='compound',
-        histtype='stepfilled', xlim=None):
+    def plot(self, ylabel='Normalized Probability', xlabel='Amplitude',
+        color='k', ls='-', bins=None, fbins=100, alpha=.1, 
+        method='compound', histtype='stepfilled', xlim=None):
         """Plot histogram and pdf
         """
         if bins is None: bins = self.bins
@@ -84,7 +84,7 @@ class Statfit:
                  ls=ls, linewidth=2)
         plt.xlim(xlim)
         plt.ylabel(ylabel, size=17)
-        plt.xlabel('Amplitude', size=17)
+        plt.xlabel(xlabel, size=17)
         plt.yticks(size='17')
         plt.xticks(size='17')
 
