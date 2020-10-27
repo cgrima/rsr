@@ -1,5 +1,6 @@
 import numpy as np
 from . import pdf as  funcs
+from . import run
 import scipy
 
 
@@ -87,3 +88,27 @@ def pdf(func, params, method=None, **kwargs):
     else:
         f = lambda x: getattr(funcs, func)(params, x, method=method)
     return sample(f, **kwargs)
+
+
+def rsr(func, params, method=None, **kwargs):
+    """Apply the RSR over a set of generated random amplitudes
+    
+    ARGUMENTS
+    ---------
+    func : string
+        PDF name in rsr.pdf
+    params : dict
+        parameters to be passed to the PDF function
+    kwargs : dict
+        Any arguments used bu sample.sample
+
+    RETURN
+    ------
+    N random evaluation over the considered PDF
+    """
+    amp = pdf(func, params, method=method, **kwargs)
+    p = run.processor(amp)
+    return p
+
+
+
