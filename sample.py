@@ -112,10 +112,50 @@ def rsr(func, params, method=None, **kwargs):
 
 
 def power_to_params(pc_db, pn_db, mu=100):
-    """Convert Pc and Pn powers in dB to a params dictionary
+    """Converts Pc and Pn powers in dB to a params dictionary
     """
     pc, pn = 10**(pc_db/10), 10**(pn_db/10)
     params = {'a':np.sqrt(pc), 
               's':np.sqrt(pn/2.), 
               'mu':mu}
     return params
+
+
+def params_to_power(params, dB=True):
+    """Converts a params dict into pc and pn powers in dB
+    """
+    pc = params['a']**2
+    pn = 2*params['s']**2
+    if dB == True:
+        pc = 10*np.log10(pc)
+        pn = 10*np.log10(pn)
+    out = {'pc':pc, 'pn':pn}
+    return out
+
+
+def measured_precision(func, params, Nsets=1, **kwargs):
+    """Gets the effective precision applicabale to the derivation of Pc and Pn from the rsr algorithm
+    the precision is the median of Nsets of histograms randomly obtained from params.
+
+    ARGUMENTS
+    ---------
+    func : string
+        PDF name in rsr.pdf
+    params : dict
+        parameters to be passed to the PDF function
+    Nsets: integer
+        Number of amplitude histogram to draw
+    kwargs : dict
+        Any arguments used bu sample.sample
+
+    RETURN
+    ------
+    pc and pn median precisions
+
+   """
+    power = params_to_power(params, dB=True)
+    ps = [rsr(func, params, **kwargs) for i in np.arange(Nsets)]
+    d_pcs = [p.power()['pc']-power['pc'] for p in ps]
+    d_pns = [p.power()['pn']-power['pn'] for p in ps]
+    out = {'ps':ps, 'power':power, 'd_pcs':d_pcs, 'd_pns':d_pns, 'd_pc':np.median(d_pcs), 'd_pn':np.median(d_pns)}
+    return out
