@@ -111,4 +111,11 @@ def rsr(func, params, method=None, **kwargs):
     return p
 
 
-
+def power_to_params(pc_db, pn_db, mu=100):
+    """Convert Pc and Pn powers in dB to a params dictionary
+    """
+    pc, pn = 10**(pc_db/10), 10**(pn_db/10)
+    params = {'a':np.sqrt(pc), 
+              's':np.sqrt(pn/2.), 
+              'mu':mu}
+    return params
