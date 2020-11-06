@@ -133,7 +133,7 @@ def params_to_power(params, dB=True):
     return out
 
 
-def measured_precision(func, params, Nsets=1, **kwargs):
+def effective_precision(func, params, Nsets=1, **kwargs):
     """Gets the effective precision applicabale to the derivation of Pc and Pn from the rsr algorithm
     the precision is the median of Nsets of histograms randomly obtained from params.
 
