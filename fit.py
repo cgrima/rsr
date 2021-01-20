@@ -26,7 +26,7 @@ def param0(sample, method='basic'):
     method : string
         method to compute the initial parameters
     """
-    if method is 'basic':
+    if method == 'basic':
         a = np.nanmean(sample)
         s = np.nanstd(sample)
         mu = 1.
