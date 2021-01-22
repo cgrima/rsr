@@ -21,13 +21,13 @@ LONG_DESC_TYPE = "text/markdown"
 
 # Dependencies
 INSTALL_REQUIRES = [
-      'lmfit',
-      'matplotlib',
-      'numpy',
-      'pandas',
-      'subradar',
-      'scipy',
-      'sklearn',
+      'lmfit>=1.0.1',
+      'matplotlib>=3.3.3',
+      'numpy>=1.19.4',
+      'pandas>=1.1.4',
+      'subradar>=1.0.1',
+      'scipy>=1.5.2',
+      'sklearn>=0.0',
 ]
 
 # Bundle everything above

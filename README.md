@@ -3,17 +3,7 @@
 This is a Python package providing basic utilities for applying the Radar Statistical Reconnaissance.
 
 
-# Requirements
-
-
-numpy > 1.11.0
-
-
-
 # Example
-
-
-
 
 ```python
 
