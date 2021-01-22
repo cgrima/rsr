@@ -2,6 +2,10 @@
 
 This is a Python package providing basic utilities for applying the Radar Statistical Reconnaissance.
 
+# Installation
+
+`pip install rsr`
+
 # Example
 
 Below, 'f' is a Statfit python Class that holds the results of the rsr processing ([description here](https://github.com/cgrima/rsr/blob/master/rsr/Classdef.py)) 
