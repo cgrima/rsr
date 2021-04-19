@@ -20,7 +20,7 @@ def gamma(params, x, data=None, eps=None):
     x = np.array([x]).flatten('C') # debug for iteration over 0-d element
     # Model function
     model = stats.gamma.pdf(x, mu, scale = 1)
-    model = np.nan_to_num(model)
+    model = np.nan_to_num(model, posinf=np.nan)
 
     if data is None:
         return model
@@ -133,9 +133,13 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
 
     def integrand_analytic(w, x, a, s, mu):
         return x*w*j0(w*a)*j0(w*x)*(1. +w*w*s*s/(2.*mu))**-mu
+    
     def integrand_compound(w, x, a, s, mu):
-        return rice({'a':a,'s':s*np.sqrt(w/mu)}, x) * gamma({'mu':mu}, w)
-
+        r = rice({'a':a,'s':s*np.sqrt(w/mu)}, x)
+        g = gamma({'mu':mu}, w)
+        return r*g
+        #return rice({'a':a,'s':s*np.sqrt(w/mu)}, x) * gamma({'mu':mu}, w)
+        
     integrands = {
         'analytic': integrand_analytic,
         'compound': integrand_compound,
@@ -145,6 +149,10 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     model = [integrate.quad(integrand, 0., np.inf, args=(i, a, s, mu), full_output=1)[0]
             for i in x] # Integration
     model = np.array(model)
+
+    # Set as nan where gamma distribution is not defined
+    g = gamma({'mu':mu}, x)
+    model[np.isfinite(g) == False] = np.nan
 
     #def integrand(w, x, a, s, mu, method=method):
     #    if method == 'analytic':
