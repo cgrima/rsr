@@ -98,6 +98,22 @@ def k(params, x, data=None, eps=None):
     return (model - data)/eps
 
 
+def hk_auto(params, x, **kwargs):
+    """Selector and application of the best method for HK.
+    the 'analytic' method is privileged over 'compound' when it is 
+    stable enough because it is faster. Valid when :
+         (Pc + Pn) <= 1
+            AND
+    -40 dB < Pc/Pn > 25 dB
+    """
+    pt = 10*np.log10(params['a']**2 + 2*params['s']**2*params['mu'])
+    if (params['mu'] > 1) and (pt > -20):
+        kwargs['method'] = 'analytic'
+    else:
+        kwargs['method'] = 'compound'
+    
+    return hk(params, x, **kwargs)
+
 
 def hk(params, x, data=None, eps=None, method = 'analytic'):
     """Homodyne K-distribution from various methods
@@ -116,6 +132,7 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     eps : sequence
         error on the data
     method : string
+        'auto' = Choose the best method from the range of input parameters.
         'analytic' = from the common analytic form Destrempes and Cloutier [2010].
                      Instable for mu < 1.
         'compound' = from the compound representation [Destrempes and Cloutier,
@@ -126,6 +143,9 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     verbose : bool
         print fitting report
     """
+    if method == 'auto':
+        return hk_auto(params, x, data=None, eps=None)
+
     # Initialisation
     a = params['a']
     s = params['s']
@@ -158,7 +178,7 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
         f3 = (b*np.sqrt(r0**2+r**2)/2.)**(v-2*w)
         f4 = kn(2*w-v, b*np.sqrt(r0**2+r**2))
         return f1*f2*f3*f4
-        
+
     integrands = {
         'analytic': integrand_analytic,
         'compound': integrand_compound,
