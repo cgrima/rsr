@@ -50,7 +50,7 @@ def rayleigh(params, x, data=None, eps=None):
 
 
 
-def rice(params, x, data=None, eps=None, method = None):
+def rice(params, x, data=None, eps=None, method='scipy'):
     """Rice PDF from scipy with adequate variables
     """
     # Initialisation
@@ -61,8 +61,10 @@ def rice(params, x, data=None, eps=None, method = None):
     if hasattr(s, 'value'): s = s.value #idem
     x = np.array([x]).flatten('C') # debug for iteration over 0-d element
     # Model function
-    model = stats.rice.pdf(x, a/s, scale = s)
-    #model = (x/s**2) * np.exp(-(x**2+a**2)/(2*s**2)) * np.i0(a*x/s**2)
+    if method == 'scipy':
+        model = stats.rice.pdf(x, a/s, scale = s)
+    if method == 'analytic':
+        model = (x/s**2) * np.exp(-(x**2+a**2)/(2*s**2)) * np.i0(a*x/s**2)
     #model = np.nan_to_num(model)
 
     if data is None:
@@ -125,6 +127,7 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     a = params['a']
     s = params['s']
     mu = params['mu']
+
     # Debug inputs
     if hasattr(a, 'value'): a = a.value #debug due to lmfit.minimize
     if hasattr(s, 'value'): s = s.value #idem
@@ -132,13 +135,13 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     x = np.array([x]).flatten('C') # debug for iteration over 0-d element
 
     def integrand_analytic(w, x, a, s, mu):
-        return x*w*j0(w*a)*j0(w*x)*(1. +w*w*s*s/(2.*mu))**-mu
+        return x*w *j0(w*a) *j0(w*x) *(1. +w**2*s**2/2.)**-mu
     
     def integrand_compound(w, x, a, s, mu):
-        r = rice({'a':a,'s':s*np.sqrt(w/mu)}, x)
+        #r = rice({'a':a,'s':s*np.sqrt(w/mu)}, x, method='scipy')
+        r = rice({'a':a,'s':s**2*w}, x, method='scipy')
         g = gamma({'mu':mu}, w)
         return r*g
-        #return rice({'a':a,'s':s*np.sqrt(w/mu)}, x) * gamma({'mu':mu}, w)
         
     integrands = {
         'analytic': integrand_analytic,
@@ -153,16 +156,6 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     # Set as nan where gamma distribution is not defined
     g = gamma({'mu':mu}, x)
     model[np.isfinite(g) == False] = np.nan
-
-    #def integrand(w, x, a, s, mu, method=method):
-    #    if method == 'analytic':
-    #        return x*w*j0(w*a)*j0(w*x)*(1. +w*w*s*s/(2.*mu))**-mu
-    #    if method == 'compound':
-    #        return rice({'a':a,'s':s*np.sqrt(w/mu)}, x) * gamma({'mu':mu}, w)
-
-    #model = [integrate.quad(integrand, 0., np.inf, args=(i, a, s, mu, method), full_output=1)[0]
-    #         for i in x] # Integration
-    #model = np.array(model)
 
     if data is None:
         return model
