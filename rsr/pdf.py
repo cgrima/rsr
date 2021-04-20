@@ -6,7 +6,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 import math
 import numpy as np
 from scipy import stats, integrate
-from scipy.special import jv, kv, j0, i0, digamma
+from scipy.special import jv, kv, j0, i0, digamma, factorial, kn
 
 
 
@@ -116,10 +116,13 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     eps : sequence
         error on the data
     method : string
-        'analytic' = from the common analytic form
+        'analytic' = from the common analytic form Destrempes and Cloutier [2010].
+                     Instable for mu < 1.
         'compound' = from the compound representation [Destrempes and Cloutier,
-                     2010, Ultrasound in Med. and Biol. 36(7): 1037-51, Eq. 16]
-        NB: 'compound' is less unstable than 'analytic' but is ~10x longer!
+                     2010, Ultrasound in Med. and Biol. 36(7): 1037-51, Eq. 16].
+                     Gives best results , especially for mu < 1 but is ~10x longer!
+        'drumheller' = from Drumheller [2002, Eq. 34].
+                       For testing only, not advised.
     verbose : bool
         print fitting report
     """
@@ -138,14 +141,28 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
         return x*w *j0(w*a) *j0(w*x) *(1. +w**2*s**2/2.)**-mu
     
     def integrand_compound(w, x, a, s, mu):
-        #r = rice({'a':a,'s':s*np.sqrt(w/mu)}, x, method='scipy')
-        r = rice({'a':a,'s':s**2*w}, x, method='scipy')
+        r = rice({'a':a,'s':np.sqrt(s**2*w)}, x, method='scipy')
         g = gamma({'mu':mu}, w)
         return r*g
+
+    def integrand_drumheller(w, x, a, s, mu):
+        # Parameters correspondance
+        r = x
+        r0 = a
+        v = mu-1
+        b2 = 2/s**2
+        b = np.sqrt(b2)
+        # Function
+        f1 = b2*r/math.gamma(v+1)
+        f2 = (b2*r0*r)**(2*w) / 4**(2*w) / factorial(w)**2
+        f3 = (b*np.sqrt(r0**2+r**2)/2.)**(v-2*w)
+        f4 = kn(2*w-v, b*np.sqrt(r0**2+r**2))
+        return f1*f2*f3*f4
         
     integrands = {
         'analytic': integrand_analytic,
         'compound': integrand_compound,
+        'drumheller':integrand_drumheller,
     }
     integrand = integrands[method]
 
