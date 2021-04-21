@@ -4,6 +4,7 @@ Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
 import math
+import mpmath
 import numpy as np
 from scipy import stats, integrate
 from scipy.special import jv, kv, j0, i0, digamma, factorial, kn
@@ -166,6 +167,7 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
         return r*g
 
     def integrand_drumheller(w, x, a, s, mu):
+        w = np.float64(w) #Convert mpmath to float64 type. Solve 'u_fonc not supported' error
         # Parameters correspondance
         r = x
         r0 = a
@@ -185,9 +187,14 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
         'drumheller':integrand_drumheller,
     }
     integrand = integrands[method]
-
-    model = [integrate.quad(integrand, 0., 500, args=(i, a, s, mu), full_output=1)[0]
-            for i in x] # Integration
+   
+    if method == 'drumheller':
+        model = [mpmath.nsum(lambda w: integrand_drumheller(w, i, a, s, mu), [0, np.inf]) 
+                for i in x] # Summation
+    else:
+        model = [integrate.quad(integrand, 0., 500, args=(i, a, s, mu), full_output=1)[0]
+                 for i in x] # Integration
+    
     model = np.array(model)
 
     # Set as nan where gamma distribution is not defined
