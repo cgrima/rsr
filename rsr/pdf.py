@@ -100,7 +100,8 @@ def k(params, x, data=None, eps=None):
 
 
 def hk_auto(params, x, **kwargs):
-    """Selector and application of the best method for HK.
+    """ !!! EXPERIMENTAL !!
+    Selector and application of the best method for HK.
     the 'analytic' method is privileged over 'compound' when it is 
     stable enough because it is faster. Valid when :
          (Pc + Pn) <= 1
