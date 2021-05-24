@@ -1,7 +1,7 @@
 """Tools and utilities for running the Radar Statistical Reconnaissance
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "Cyril Grima"
 
 __all__ = ["detect", "fit", "invert", "pdf", "run", "utils"]
