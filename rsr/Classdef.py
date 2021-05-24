@@ -34,13 +34,15 @@ class Statfit:
         """Total (pt), coherent (pc), and incoherent (pn) components in power
         """
         pt, pc, pn = np.average(self.sample)**2, self.values['a']**2, \
-                     2*self.values['s']**2
+                     2*self.values['s']**2*self.values['mu']
+        mu = self.values['mu']
         if db is True:
             pt, pc, pn = 10*np.log10(pt), 10*np.log10(pc), 10*np.log10(pn)
         pt = 0 if self.success is False else pt
         pc = 0 if self.success is False else pc
         pn = 0 if self.success is False else pn
-        return {'pt':pt, 'pc':pc, 'pn':pn, 'pc-pn':pc-pn}
+        mu = 0 if self.success is False else mu
+        return {'pt':pt, 'pc':pc, 'pn':pn, 'pc-pn':pc/pn, 'mu':mu}
 
 
     def crl(self, **kwargs):
@@ -99,11 +101,6 @@ class Statfit:
             % (self.flag(), self.elapsed, self.nfev, self.crl()))
 
         add('%s\n' % (self.message))
-
-        #for i, key in enumerate(self.values.keys()):
-        #    add('%s = %.3e, ' % (key, self.params[key].value))
-
-        #add('\n')
 
         for i, key in enumerate(self.power().keys()):
             add('%s = %3.1f dB, ' % (key, self.power()[key]))

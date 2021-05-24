@@ -91,8 +91,13 @@ def lmfit(sample, fit_model='hk', bins='auto', p0 = None,
     #     (Name,    Value,                 Vary,   Min,    Max,    Expr)
     prm0.add('a',     p0['a'],              True,   0,  1,      None)
     prm0.add('s',     p0['s'],              True,   0,  1,      None)
-    prm0.add('mu',    p0['mu'],             True,   0,  1000,   None)
-    prm0.add('pt',    np.average(sample)**2,False,  0,  1,      'a**2+2*s**2')
+    prm0.add('mu',    p0['mu'],             True,   .5, 10,    None)
+    prm0.add('pt',    np.average(sample)**2,False,  0,  1,      'a**2+2*s**2*mu')
+
+    #if fit_model == 'hk':
+    #    # From [Dutt and Greenleaf. 1994, eq.14]
+    #    prm0.add('a4',    np.average(sample)**4,False,  0,  1,
+    #             '8*(1+1/mu)*s**4 + 8*s**2*s**2 + a**4')
 
     #--------------------------------------------------------------------------
     # Fit

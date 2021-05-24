@@ -94,8 +94,8 @@ def cb_processor(a):
     """
     p = a.power()
     #print(p)
-    print("#%d\tCorrelation: %.3f\tPt: %.1f dB   Pc: %.1f dB   Pn: %.1f dB" %
-            (a.values['ID'], a.crl(), p['pt'], p['pc'], p['pn'] ) )
+    print("#%d\tCorrelation: %.3f\tPt: %.1f dB   Pc: %.1f dB   Pn: %.1f dB   mu: %.1f" %
+            (a.values['ID'], a.crl(), p['pt'], p['pc'], p['pn'], a.values['mu'] ) )
     return a
 
 
