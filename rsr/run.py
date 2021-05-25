@@ -68,11 +68,13 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     a = fit.lmfit( np.abs(amp), bins=bins, fit_model=fit_model)
 
     # Remove Scaling
-    pc = 10*np.log10( a.values['a']**2  ) - 20*np.log10(scale_amp)
-    pn = 10*np.log10( 2*a.values['s']**2  ) - 20*np.log10(scale_amp)
     a.sample = amp/scale_amp
-    a.values['a'] = np.sqrt( 10**(pc/10.) )
-    a.values['s'] = np.sqrt( 10**(pn/10.)/2. )
+
+    #a0 = a.values['a']/scale_amp
+    #b0 = np.sqrt(10**(a.power()['pn']/10))/scale_amp/np.sqrt(2*a.values['mu'])
+
+    a.values['a'] = a.values['a']/scale_amp
+    a.values['s'] = a.values['s']/scale_amp
 
     # Output
     if 'ID' in kwargs:

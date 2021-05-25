@@ -42,7 +42,7 @@ class Statfit:
         pc = 0 if self.success is False else pc
         pn = 0 if self.success is False else pn
         mu = 0 if self.success is False else mu
-        return {'pt':pt, 'pc':pc, 'pn':pn, 'pc-pn':pc/pn, 'mu':mu}
+        return {'pt':pt, 'pc':pc, 'pn':pn, 'pc-pn':pc-pn, 'mu':mu}
 
 
     def crl(self, **kwargs):
