@@ -111,12 +111,13 @@ def rsr(func, params, method=None, **kwargs):
     return p
 
 
-def power_to_params(pc_db, pn_db, mu=100):
+def power_to_params(params):
     """Converts Pc and Pn powers in dB to a params dictionary
     """
+    pc_db, pn_db, mu = params['pc'], params['pn'], params['mu']
     pc, pn = 10**(pc_db/10), 10**(pn_db/10)
     params = {'a':np.sqrt(pc), 
-              's':np.sqrt(pn/2.), 
+              's':np.sqrt(pn/2./mu), 
               'mu':mu}
     return params
 
@@ -124,12 +125,13 @@ def power_to_params(pc_db, pn_db, mu=100):
 def params_to_power(params, dB=True):
     """Converts a params dict into pc and pn powers in dB
     """
+    mu = params['mu']
     pc = params['a']**2
-    pn = 2*params['s']**2
+    pn = 2*params['s']**2*mu
     if dB == True:
         pc = 10*np.log10(pc)
         pn = 10*np.log10(pn)
-    out = {'pc':pc, 'pn':pn}
+    out = {'pc':pc, 'pn':pn, 'mu':mu}
     return out
 
 
