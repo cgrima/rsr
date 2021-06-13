@@ -116,9 +116,8 @@ def power_to_params(params):
     """
     pc_db, pn_db, mu = params['pc'], params['pn'], params['mu']
     pc, pn = 10**(pc_db/10), 10**(pn_db/10)
-    params = {'a':np.sqrt(pc), 
-              's':np.sqrt(pn/2./mu), 
-              'mu':mu}
+    params['a'] = np.sqrt(pc)
+    params['s'] = np.sqrt(pn/2./mu)
     return params
 
 
@@ -131,8 +130,10 @@ def params_to_power(params, dB=True):
     if dB == True:
         pc = 10*np.log10(pc)
         pn = 10*np.log10(pn)
-    out = {'pc':pc, 'pn':pn, 'mu':mu}
-    return out
+
+    params['pc'] = pc
+    params['pn'] = pn
+    return params
 
 
 def effective_precision(func, params, Nsets=1, **kwargs):
