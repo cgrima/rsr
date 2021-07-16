@@ -193,7 +193,7 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
         model = [mpmath.nsum(lambda w: integrand_drumheller(w, i, a, s, mu), [0, np.inf]) 
                 for i in x] # Summation
     else:
-        model = [integrate.quad(integrand, 0., 500, args=(i, a, s, mu), full_output=1)[0]
+        model = [integrate.quad(integrand, 0., np.inf, args=(i, a, s, mu), full_output=1)[0]
                  for i in x] # Integration
     
     model = np.array(model)
