@@ -76,11 +76,8 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     a.values['a'] = a.values['a']/scale_amp
     a.values['s'] = a.values['s']/scale_amp
 
-    # Output
-    if 'ID' in kwargs:
-        a.values['ID'] = kwargs['ID']
-    else:
-        a.values['ID'] = -1
+    # Output ID in values if provided
+    a.values['ID'] = kwargs.get('ID', -1)
 
     return a
 
@@ -178,8 +175,8 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
     # Processing
     #-----------
 
-    # Do NOT use the multiprocessing package
-    if nbcores== -1:
+    if nbcores <= 1:
+        # Do NOT use the multiprocessing package
         results = []
         for i in ID:
             a = processor(args[i], **kwargs, ID=w['xo'][i])
@@ -187,14 +184,11 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
             results.append(b)
         out = pd.DataFrame(results)
-
-    # Do use the multiprocessing package
-    if nbcores > 0:
+    else:
+        # Do use the multiprocessing package
         results = []
-        if verbose is True:
-            async_inline = Async(processor, cb_processor, nbcores=nbcores)
-        elif verbose is False:
-            async_inline = Async(processor, None, nbcores=nbcores)
+        async_cb = cb_processor if verbose else None
+        async_inline = Async(processor, async_cb, nbcores=nbcores)
 
         for i in ID:
             results.append( async_inline.call(args[i], **kwargs, ID=w['xo'][i]) )
@@ -213,9 +207,9 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
         out['xo'] = w['xo']
         out = out.drop('ID', 1)
 
+    if verbose:
         t2 = time.time()
-        if verbose is True:
-            print("- Processed in %.1f s.\n" % (t2-t1))
+        print("- Processed in %.1f s.\n" % (t2-t1))
 
     return out
 
@@ -299,23 +293,20 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
     # Processing
     #-----------
 
-    # Do NOT use the multiprocessing package
-    if nbcores == -1:
-        results = [] #pd.DataFrame()
+    if nbcores <= 1:
+        # Do NOT use the multiprocessing package
+        results = []
         for i, orig_i in enumerate(ID):
             a = processor(args[i], **kwargs, ID=orig_i)
             cb_processor(a)
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
             results.append(b)
         out = pd.DataFrame(results)
-
-    # Do use the multiprocessing package
-    if nbcores > 0:
+    else:
+        # Do use the multiprocessing package
         results = []
-        if verbose is True:
-            async_inline = Async(processor, cb_processor, nbcores=nbcores)
-        elif verbose is False:
-            async_inline = Async(processor, None, nbcores=nbcores)
+        async_cb = cb_processor if verbose else None
+        async_inline = Async(processor, async_cb, nbcores=nbcores)
 
         for i, orig_i in enumerate(ID):
             results.append( async_inline.call(args[i], **kwargs, ID=orig_i) )
@@ -334,8 +325,8 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
         #out['xo'] = w['xo']
         #out = out.drop('ID', 1)
 
+    if verbose:
         t2 = time.time()
-        if verbose is True:
-            print("- Processed in %.1f s.\n" % (t2-t1))
+        print("- Processed in %.1f s.\n" % (t2-t1))
 
     return out
