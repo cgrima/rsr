@@ -180,13 +180,13 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
 
     # Do NOT use the multiprocessing package
     if nbcores== -1:
-        results = pd.DataFrame()
+        results = []
         for i in ID:
             a = processor(args[i], **kwargs, ID=w['xo'][i])
             cb_processor(a)
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            results = results.append(b, ignore_index=True)
-        out = results
+            results.append(b)
+        out = pd.DataFrame(results)
 
     # Do use the multiprocessing package
     if nbcores > 0:
@@ -200,12 +200,13 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
             results.append( async_inline.call(args[i], **kwargs, ID=w['xo'][i]) )
         async_inline.wait()
         # Sorting Results
-        out = pd.DataFrame()
+        results2 = []
         for i in results:
             a = i.get()
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            out = out.append(b, ignore_index=True)
-        out = out.sort_values('ID')
+            results2.append(b)
+        results2.sort(key=lambda x: x['ID'])
+        out = pd.DataFrame(results2)
 
         out['xa'] = w['xa']
         out['xb'] = w['xb']
@@ -300,13 +301,13 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
 
     # Do NOT use the multiprocessing package
     if nbcores == -1:
-        results = pd.DataFrame()
+        results = [] #pd.DataFrame()
         for i, orig_i in enumerate(ID):
             a = processor(args[i], **kwargs, ID=orig_i)
             cb_processor(a)
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            results = results.append(b, ignore_index=True)
-        out = results
+            results.append(b)
+        out = pd.DataFrame(results)
 
     # Do use the multiprocessing package
     if nbcores > 0:
@@ -320,12 +321,13 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
             results.append( async_inline.call(args[i], **kwargs, ID=orig_i) )
         async_inline.wait()
         # Sorting Results
-        out = pd.DataFrame()
+        results2 = []
         for i in results:
             a = i.get()
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            out = out.append(b, ignore_index=True)
-        out = out.sort_values('ID')
+            results2.append(b)
+        results2.sort(key=lambda x: x['ID'])
+        out = pd.DataFrame(results2)
 
         #out['xa'] = w['xa']
         #out['xb'] = w['xb']
