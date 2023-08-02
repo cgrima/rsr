@@ -91,7 +91,7 @@ class Statfit:
         plt.xticks(size='17')
 
 
-    def report(self, frq=60e6, inv='spm'):
+    def report(self, frq=60e6, inv='spm', file=None):
         """Print a report for the fit
         """
         buff = []
@@ -114,7 +114,7 @@ class Statfit:
         add('\n')
 
         out = "".join(buff)
-        print(out)
+        print(out, file=file)
 
 
     def flag(self):
