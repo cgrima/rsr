@@ -123,23 +123,3 @@ class Statfit:
         out = self.success * np.isfinite(self.crl()) * (self.crl() > 0)
         return(int(out))
 
-
-
-class Async:
-    """
-    Class to support multi procesing jobs. For calling example, see:
-    http://masnun.com/2014/01/01/async-execution-in-python-using-multiprocessing-pool.html
-    """
-    def __init__(self, func, cb_func, nbcores=1):
-        self.func = func
-        self.cb_func = cb_func
-        self.pool = multiprocessing.Pool(nbcores)
-
-    def call(self,*args, **kwargs):
-        return self.pool.apply_async(self.func, args, kwargs, self.cb_func)
-
-    def wait(self):
-        self.pool.close()
-        self.pool.join()
-
-
