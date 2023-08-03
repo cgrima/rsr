@@ -2,12 +2,14 @@
 Wrappers for running RSR processing
 """
 
-from . import fit
-from .Classdef import Async
+import time
+
 import numpy as np
 import pandas as pd
-import time
 from sklearn.neighbors import KDTree
+
+from . import fit
+from .Classdef import Async
 
 
 def timing(func):
@@ -122,7 +124,8 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
     xb = xa + winsize-1
 
     # Cut last window in limb
-    if xb[-1] > x[-1]: xb[-1] = x[-1]
+    if xb[-1] > x[-1]:
+        xb[-1] = x[-1]
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
     # Output
@@ -284,9 +287,9 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
     # Radius Query
     circle_xy = np.array(list(zip(circle_x, circle_y)))
     ind = tree.query_radius(circle_xy, r=circle_r)
-    
+
     # Jobs Definition
-    ID, args, kwgs = [], [], []
+    ID, args = [], []
     for i, data_index in enumerate(ind):
         if data_index.size != 0:
             data = np.take(amp, data_index)
