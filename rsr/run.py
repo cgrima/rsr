@@ -167,16 +167,11 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
     # Windows along-track
     x = np.arange( len(amp) ) #vector index
     w = frames(x, **kwargs)
-    ID = np.arange(w['xa'].size)
 
     # Jobs Definition
     jobs = []
-    for i in ID:
-        jobs.append({
-            'amp': amp[w['xa'][i]: w['xb'][i]],
-            **kwargs,
-            'ID': w['xo'][i]
-        })
+    for i, (ai, bi) in enumerate(zip(w['xa'], w['xb']), start=1):
+        jobs.append({'amp': amp[ai:bi], **kwargs, 'ID': i})
 
     #-----------
     # Processing
@@ -184,6 +179,9 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
 
     results = []
     async_cb = cb_processor if verbose else None
+    if verbose:
+        print("#", len(jobs), "jobs")
+
     if nbcores <= 1:
         # Do NOT use the multiprocessing package
         for job in jobs:
@@ -205,7 +203,6 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
     out['xa'] = w['xa']
     out['xb'] = w['xb']
     out['xo'] = w['xo']
-    out = out.drop('ID', 1)
 
     if verbose:
         t2 = time.time()
@@ -282,7 +279,7 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
 
     # Jobs Definition
     jobs = []
-    for i, data_index in enumerate(ind):
+    for i, data_index in enumerate(ind, start=1):
         if data_index.size == 0:
             continue
         data = np.take(amp, data_index)
@@ -294,6 +291,9 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
 
     results = []
     async_cb = cb_processor if verbose else None
+    if verbose:
+        print("#", len(jobs), "jobs")
+
     if nbcores <= 1:
         # Do NOT use the multiprocessing package
         for job in jobs:
@@ -315,7 +315,6 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
     #out['xa'] = w['xa']
     #out['xb'] = w['xb']
     #out['xo'] = w['xo']
-    #out = out.drop('ID', 1)
 
     if verbose:
         t2 = time.time()
