@@ -170,8 +170,8 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
 
     # Jobs Definition
     jobs = []
-    for i, (ai, bi) in enumerate(zip(w['xa'], w['xb']), start=1):
-        jobs.append({'amp': amp[ai:bi], **kwargs, 'ID': i})
+    for ai, bi, xo in zip(w['xa'], w['xb'], w['xo']
+        jobs.append({'amp': amp[ai:bi], **kwargs, 'ID': xo})
 
     #-----------
     # Processing

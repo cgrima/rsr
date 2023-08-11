@@ -1,33 +1,39 @@
 """Various python classes for rsr package
 """
 
+from typing import Callable, Dict
+from dataclasses import dataclass
+
 import numpy as np
 from . import invert
 import matplotlib.pyplot as plt
 import subradar as sr
 
+import lmfit
 
+@dataclass
 class Statfit:
     """Class holding statistical fit results
     """
-    def __init__(self, sample, func, values, params, chisqr, redchi,
-                 elapsed, nfev, message, success, residual, x, n, edges, bins):
-        self.sample = sample
-        self.func = func
-        self.values = values
-        self.params = params
-        self.chisqr = chisqr
-        self.redchi = redchi
-        self.elapsed = elapsed
-        self.nfev = nfev
-        self.message = message
-        self.success = success
-        self.residual = residual
-        self.x = x
-        self.n = n
-        self.edges = edges
-        self.bins = bins
 
+    sample: np.ndarray
+    # PDF function used
+    func: Callable
+    # lmfit minimization results
+    values: Dict[str, float]
+    params: lmfit.Parameters
+    chisqr: float
+    redchi: float
+    elapsed: float
+    nfev: float
+    message: str
+    success: bool
+    residual: np.ndarray
+    # Histogram bin centers and values
+    x: np.ndarray
+    n: np.ndarray
+    edges: np.ndarray
+    bins: np.ndarray
 
     def power(self, db=True):
         """Total (pt), coherent (pc), and incoherent (pn) components in power
