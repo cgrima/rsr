@@ -63,7 +63,7 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
 
     # Gain and Scaling
     amp = amp * 10**(gain/20.)
-    scale_amp = scale(amp) if scaling is True else 1
+    scale_amp = scale(amp) if scaling else 1
     amp = amp*scale_amp
 
     # Fit
