@@ -32,7 +32,7 @@ def spm(frq, pc, pn):
         return np.exp(-a**2)/a**2
 
     sh = wl*.001
-    while (u_equation(k, sh) > u):
+    while u_equation(k, sh) > u:
         sh = sh+wl*.001
 
     r = -np.sqrt( pc_lin*np.exp((2*k*sh)**2) )
@@ -59,7 +59,8 @@ def srf_coeff(Psc=None, Psn=None, h0=None, wb=None):
     return 10*np.log10(Rsc), 10*np.log10(Rsn)
 
 
-def bed_coeff(Psc=None, Psn=None, Pbc=None, Pbn=None, n1=None, sh=None, h0=None, h1=None, Q1=None, wf=None, wb=None):
+def bed_coeff(Psc=None, Psn=None, Pbc=None, Pbn=None, n1=None, sh=None,
+              h0=None, h1=None, Q1=None, wf=None, wb=None):
     """Use the surface properties and bed powers to get bed reflectivity and
     backscatter coefficients. Signal is assumed to be already calibrated.
     Arguments must be energy in dB

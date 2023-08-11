@@ -2,13 +2,14 @@
 Wrappers for running RSR processing
 """
 
+import time
 import multiprocessing
 
-from . import fit
 import numpy as np
 import pandas as pd
-import time
 from sklearn.neighbors import KDTree
+
+from . import fit
 
 
 def timing(func):
@@ -65,7 +66,7 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
 
     # Gain and Scaling
     amp = amp * 10**(gain/20.)
-    scale_amp = scale(amp) if scaling is True else 1
+    scale_amp = scale(amp) if scaling else 1
     amp = amp*scale_amp
 
     # Fit
@@ -123,7 +124,8 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
     xb = xa + winsize-1
 
     # Cut last window in limb
-    if xb[-1] > x[-1]: xb[-1] = x[-1]
+    if xb[-1] > x[-1]:
+        xb[-1] = x[-1]
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
     # Output
@@ -170,7 +172,7 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
 
     # Jobs Definition
     jobs = []
-    for ai, bi, xo in zip(w['xa'], w['xb'], w['xo']
+    for ai, bi, xo in zip(w['xa'], w['xb'], w['xo']):
         jobs.append({'amp': amp[ai:bi], **kwargs, 'ID': xo})
 
     #-----------

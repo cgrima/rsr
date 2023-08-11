@@ -3,13 +3,15 @@ Various tools for application of the rsr
 Author: Cyril Grima <cyril.grima@gmail.com>
 """
 
-import numpy as np
-from . import pdf
-from . import fit
-from . import invert
 import time
+
+import numpy as np
 from pandas import DataFrame
 import matplotlib.pyplot as plt
+
+#from . import pdf
+from . import fit
+#from . import invert
 
 
 def inline_estim(vec, fit_model='hk', bins='auto', inv='spm', winsize=1000.,
@@ -50,7 +52,8 @@ def inline_estim(vec, fit_model='hk', bins='auto', inv='spm', winsize=1000.,
     #xa = x[:x.size-winsize:sampling] #windows starting coordinate
     xa = x[:np.int(x.size-winsize):np.int(sampling)] #windows starting coordinate
     xb = xa + winsize-1 #window end coordinate
-    if xb[-1] > x[-1]: xb[-1] = x[-1] #cut last window in limb
+    if xb[-1] > x[-1]:
+        xb[-1] = x[-1] #cut last window in limb
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
     #--------------------------------------------------------------------------
@@ -66,7 +69,7 @@ def inline_estim(vec, fit_model='hk', bins='auto', inv='spm', winsize=1000.,
     # Fit for all the windows
     #--------------------------------------------------------------------------
     for i, val in enumerate(xo):
-        if verbose is True:
+        if verbose:
             print('ITER '+ str(i+1) + '/' + str(xa.size) +
             ' (observations ' + str(xa[i]) + ':' + str(xb[i]) + ')')
 
@@ -83,7 +86,7 @@ def inline_estim(vec, fit_model='hk', bins='auto', inv='spm', winsize=1000.,
         table.loc[i, 'sh'] = p.invert(frq=frq, method=inv)['sh']
         table.loc[i, 'flag'] = p.flag()
 
-        if verbose is True:
+        if verbose:
             p.report(frq=frq)
 
     #--------------------------------------------------------------------------
@@ -174,7 +177,7 @@ def plot_inline(a, frq=60e6, title=''):
     plt.yticks(size='15')
     ax_sh.set_yticks([.01, .1, 1])
     ax_sh.set_yticklabels(['0.01', '0.1', '1'])
-    ax_sh.set
+    ax_sh.set # TODO: what is this
     plt.legend(loc='upper right', fancybox=True).get_frame().set_alpha(0.5)
 
 

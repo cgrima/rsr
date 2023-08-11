@@ -17,7 +17,8 @@ def gamma(params, x, data=None, eps=None):
     # Initialisation
     mu = params['mu']
     # Debug inputs
-    if hasattr(mu, 'value'): mu = mu.value #idem
+    if hasattr(mu, 'value'):
+        mu = mu.value #idem
     x = np.array([x]).flatten('C') # debug for iteration over 0-d element
     # Model function
     model = stats.gamma.pdf(x, mu, scale = 1)
@@ -26,7 +27,7 @@ def gamma(params, x, data=None, eps=None):
     if data is None:
         return model
     if eps is None:
-        return (model - data) #residual
+        return model - data #residual
     return (model - data)/eps
 
 
@@ -46,7 +47,7 @@ def rayleigh(params, x, data=None, eps=None):
     if data is None:
         return model
     if eps is None:
-        return (model - data) #residual
+        return model - data #residual
     return (model - data)/eps
 
 
@@ -71,7 +72,7 @@ def rice(params, x, data=None, eps=None, method='scipy'):
     if data is None:
         return model
     if eps is None:
-        return (model - data) #residual
+        return model - data #residual
     return (model - data)/eps
 
 
@@ -95,14 +96,14 @@ def k(params, x, data=None, eps=None):
     if data is None:
         return model
     if eps is None:
-        return (model - data) #residual
+        return model - data #residual
     return (model - data)/eps
 
 
 def hk_auto(params, x, **kwargs):
     """ !!! EXPERIMENTAL !!
     Selector and application of the best method for HK.
-    the 'analytic' method is privileged over 'compound' when it is 
+    the 'analytic' method is privileged over 'compound' when it is
     stable enough because it is faster. Valid when :
          (Pc + Pn) <= 1
             AND
@@ -113,7 +114,7 @@ def hk_auto(params, x, **kwargs):
         kwargs['method'] = 'analytic'
     else:
         kwargs['method'] = 'compound'
-    
+
     return hk(params, x, **kwargs)
 
 
@@ -154,14 +155,17 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     mu = params['mu']
 
     # Debug inputs
-    if hasattr(a, 'value'): a = a.value #debug due to lmfit.minimize
-    if hasattr(s, 'value'): s = s.value #idem
-    if hasattr(mu, 'value'): mu = mu.value #idem
+    if hasattr(a, 'value'):
+        a = a.value #debug due to lmfit.minimize
+    if hasattr(s, 'value'):
+        s = s.value #idem
+    if hasattr(mu, 'value'):
+        mu = mu.value #idem
     x = np.array([x]).flatten('C') # debug for iteration over 0-d element
 
     def integrand_analytic(w, x, a, s, mu):
         return x*w *j0(w*a) *j0(w*x) *(1. +w**2*s**2/2.)**-mu
-    
+
     def integrand_compound(w, x, a, s, mu):
         r = rice({'a':a,'s':np.sqrt(s**2*w)}, x, method='scipy')
         g = gamma({'mu':mu}, w)
@@ -188,14 +192,14 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
         'drumheller':integrand_drumheller,
     }
     integrand = integrands[method]
-   
+    # W0640: Cell variable i defined in loop (cell-var-from-loop)
     if method == 'drumheller':
-        model = [mpmath.nsum(lambda w: integrand_drumheller(w, i, a, s, mu), [0, np.inf]) 
+        model = [mpmath.nsum(lambda w: integrand_drumheller(w, i, a, s, mu), [0, np.inf])
                 for i in x] # Summation
     else:
         model = [integrate.quad(integrand, 0., np.inf, args=(i, a, s, mu), full_output=1)[0]
                  for i in x] # Integration
-    
+
     model = np.array(model)
 
     # Set as nan where gamma distribution is not defined
@@ -205,5 +209,5 @@ def hk(params, x, data=None, eps=None, method = 'analytic'):
     if data is None:
         return model
     if eps is None:
-        return (model - data) #residual
+        return model - data #residual
     return (model - data)/eps

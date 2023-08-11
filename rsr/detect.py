@@ -76,4 +76,3 @@ def maxprd(rdg, loc, ywinwidth):
         # No Quality metrics for now
         ok[i] = 1
     return {'y':y, 'val':val, 'ok':ok}
-
