@@ -1,34 +1,39 @@
 """Various python classes for rsr package
 """
 
+from typing import Callable, Dict
+from dataclasses import dataclass
+
 import numpy as np
-from . import invert
 import matplotlib.pyplot as plt
+
 import subradar as sr
-import multiprocessing
+from . import invert
+import lmfit
 
-
+@dataclass
 class Statfit:
     """Class holding statistical fit results
     """
-    def __init__(self, sample, func, values, params, chisqr, redchi,
-                 elapsed, nfev, message, success, residual, x, n, edges, bins):
-        self.sample = sample
-        self.func = func
-        self.values = values
-        self.params = params
-        self.chisqr = chisqr
-        self.redchi = redchi
-        self.elapsed = elapsed
-        self.nfev = nfev
-        self.message = message
-        self.success = success
-        self.residual = residual
-        self.x = x
-        self.n = n
-        self.edges = edges
-        self.bins = bins
 
+    sample: np.ndarray
+    # PDF function used
+    func: Callable
+    # lmfit minimization results
+    values: Dict[str, float]
+    params: lmfit.Parameters
+    chisqr: float
+    redchi: float
+    elapsed: float
+    nfev: float
+    message: str
+    success: bool
+    residual: np.ndarray
+    # Histogram bin centers and values
+    x: np.ndarray
+    n: np.ndarray
+    edges: np.ndarray
+    bins: np.ndarray
 
     def power(self, db=True):
         """Total (pt), coherent (pc), and incoherent (pn) components in power
@@ -36,12 +41,10 @@ class Statfit:
         pt, pc, pn = np.average(self.sample)**2, self.values['a']**2, \
                      2*self.values['s']**2*self.values['mu']
         mu = self.values['mu']
-        if db is True:
+        if db:
             pt, pc, pn = 10*np.log10(pt), 10*np.log10(pc), 10*np.log10(pn)
-        pt = 0 if self.success is False else pt
-        pc = 0 if self.success is False else pc
-        pn = 0 if self.success is False else pn
-        mu = 0 if self.success is False else mu
+        if not self.success:
+            pt, pc, pn, mu = 0, 0, 0, 0 # TODO: should these be floats?
         return {'pt':pt, 'pc':pc, 'pn':pn, 'pc-pn':pc-pn, 'mu':mu}
 
 
@@ -50,10 +53,10 @@ class Statfit:
         """
         try:
             out = np.corrcoef(self.n, self.n+self.residual)[0,1]
-        except:
+        except: # TODO: make this more specific
             out = 0.
 
-        if np.isfinite(out) is False or self.success is False:
+        if (not np.isfinite(out)) or (not self.success):
             out = 0.
         return out
 
@@ -73,13 +76,15 @@ class Statfit:
 
 
     def plot(self, ylabel='Normalized Probability', xlabel='Amplitude',
-        color='k', ls='-', bins=None, fbins=100, alpha=.1, 
+        color='k', ls='-', bins=None, fbins=100, alpha=.1,
         method='compound', histtype='stepfilled', xlim=None):
         """Plot histogram and pdf
         """
-        if bins is None: bins = self.bins
+        if bins is None:
+            bins = self.bins
 
-        foo, edges, bar = plt.hist(self.sample, bins=bins, density=True)
+        # TODO: fix unused histogram arguments fbins, alpha, histtype
+        _, edges, _ = plt.hist(self.sample, bins=bins, density=True)
         x = [ val-(val-edges[i-1])/2. for i, val in enumerate(edges) ][1:]
 
         plt.plot(x, self.func(self.values, x, method=method), color=color,
@@ -91,7 +96,7 @@ class Statfit:
         plt.xticks(size='17')
 
 
-    def report(self, frq=60e6, inv='spm'):
+    def report(self, frq=60e6, inv='spm', file=None):
         """Print a report for the fit
         """
         buff = []
@@ -102,8 +107,9 @@ class Statfit:
 
         add('%s\n' % (self.message))
 
-        for i, key in enumerate(self.power().keys()):
-            add('%s = %3.1f dB, ' % (key, self.power()[key]))
+        pwr = self.power()
+        for key, val in pwr.items():
+            add('%s = %3.1f dB, ' % (key, val))
 
         add('\n')
 
@@ -114,32 +120,12 @@ class Statfit:
         add('\n')
 
         out = "".join(buff)
-        print(out)
+        print(out, file=file)
 
 
     def flag(self):
         """0 is bad data, 1 is good data
         """
         out = self.success * np.isfinite(self.crl()) * (self.crl() > 0)
-        return(int(out))
-
-
-
-class Async:
-    """
-    Class to support multi procesing jobs. For calling example, see:
-    http://masnun.com/2014/01/01/async-execution-in-python-using-multiprocessing-pool.html
-    """
-    def __init__(self, func, cb_func, nbcores=1):
-        self.func = func
-        self.cb_func = cb_func
-        self.pool = multiprocessing.Pool(nbcores)
-
-    def call(self,*args, **kwargs):
-        return self.pool.apply_async(self.func, args, kwargs, self.cb_func)
-
-    def wait(self):
-        self.pool.close()
-        self.pool.join()
-
+        return int(out)
 

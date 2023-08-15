@@ -2,12 +2,14 @@
 Wrappers for running RSR processing
 """
 
-from . import fit
-from .Classdef import Async
+import time
+import multiprocessing
+
 import numpy as np
 import pandas as pd
-import time
 from sklearn.neighbors import KDTree
+
+from . import fit
 
 
 def timing(func):
@@ -30,6 +32,9 @@ def scale(amp):
     out = 1/(pik*10)
     return out
 
+def processor_mp_(kwargs):
+    """ Wrapper function for calling processor with multiprocessing """
+    return processor(**kwargs)
 
 def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs):
     """Apply RSR over a sample of amplitudes
@@ -61,7 +66,7 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
 
     # Gain and Scaling
     amp = amp * 10**(gain/20.)
-    scale_amp = scale(amp) if scaling is True else 1
+    scale_amp = scale(amp) if scaling else 1
     amp = amp*scale_amp
 
     # Fit
@@ -76,11 +81,8 @@ def processor(amp, gain=0., bins='stone', fit_model='hk', scaling=True, **kwargs
     a.values['a'] = a.values['a']/scale_amp
     a.values['s'] = a.values['s']/scale_amp
 
-    # Output
-    if 'ID' in kwargs:
-        a.values['ID'] = kwargs['ID']
-    else:
-        a.values['ID'] = -1
+    # Output ID in values if provided
+    a.values['ID'] = kwargs.get('ID', -1)
 
     return a
 
@@ -122,7 +124,8 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
     xb = xa + winsize-1
 
     # Cut last window in limb
-    if xb[-1] > x[-1]: xb[-1] = x[-1]
+    if xb[-1] > x[-1]:
+        xb[-1] = x[-1]
     xo = [val+(xb[i]-val)/2. for i, val in enumerate(xa)]
 
     # Output
@@ -166,55 +169,46 @@ def along(amp, nbcores=1, verbose=True, **kwargs):
     # Windows along-track
     x = np.arange( len(amp) ) #vector index
     w = frames(x, **kwargs)
-    ID = np.arange(w['xa'].size)
 
     # Jobs Definition
-    args, kwgs = [], []
-    for i in ID:
-        args.append( amp[w['xa'][i]: w['xb'][i]] )
-        #kwgs.append( dict(**kwargs, i=w['xo'][i])  )
+    jobs = []
+    for ai, bi, xo in zip(w['xa'], w['xb'], w['xo']):
+        jobs.append({'amp': amp[ai:bi], **kwargs, 'ID': xo})
 
     #-----------
     # Processing
     #-----------
 
-    # Do NOT use the multiprocessing package
-    if nbcores== -1:
-        results = pd.DataFrame()
-        for i in ID:
-            a = processor(args[i], **kwargs, ID=w['xo'][i])
-            cb_processor(a)
+    results = []
+    async_cb = cb_processor if verbose else None
+    if verbose:
+        print("#", len(jobs), "jobs")
+
+    if nbcores <= 1:
+        # Do NOT use the multiprocessing package
+        for job in jobs:
+            a = processor(**job)
+            if async_cb:
+                async_cb(a)
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            results = results.append(b, ignore_index=True)
-        out = results
+            results.append(b)
+    else:
+        # Do use the multiprocessing package
+        with multiprocessing.Pool(nbcores) as pool:
+            for a in pool.imap(processor_mp_, jobs):
+                if async_cb:
+                    async_cb(a)
+                b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+                results.append(b)
 
-    # Do use the multiprocessing package
-    if nbcores > 0:
-        results = []
-        if verbose is True:
-            async_inline = Async(processor, cb_processor, nbcores=nbcores)
-        elif verbose is False:
-            async_inline = Async(processor, None, nbcores=nbcores)
+    out = pd.DataFrame(results)
+    out['xa'] = w['xa']
+    out['xb'] = w['xb']
+    out['xo'] = w['xo']
 
-        for i in ID:
-            results.append( async_inline.call(args[i], **kwargs, ID=w['xo'][i]) )
-        async_inline.wait()
-        # Sorting Results
-        out = pd.DataFrame()
-        for i in results:
-            a = i.get()
-            b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            out = out.append(b, ignore_index=True)
-        out = out.sort_values('ID')
-
-        out['xa'] = w['xa']
-        out['xb'] = w['xb']
-        out['xo'] = w['xo']
-        out = out.drop('ID', 1)
-
+    if verbose:
         t2 = time.time()
-        if verbose is True:
-            print("- Processed in %.1f s.\n" % (t2-t1))
+        print("- Processed in %.1f s.\n" % (t2-t1))
 
     return out
 
@@ -284,56 +278,49 @@ def incircles(amp, amp_x, amp_y, circle_x, circle_y, circle_r, leaf_size=None,
     # Radius Query
     circle_xy = np.array(list(zip(circle_x, circle_y)))
     ind = tree.query_radius(circle_xy, r=circle_r)
-    
+
     # Jobs Definition
-    ID, args, kwgs = [], [], []
-    for i, data_index in enumerate(ind):
-        if data_index.size != 0:
-            data = np.take(amp, data_index)
-            args.append(data)
-            ID.append(i)
-        #kwgs.append( dict(**kwargs, i=w['xo'][i])  )
+    jobs = []
+    for i, data_index in enumerate(ind, start=1):
+        if data_index.size == 0:
+            continue
+        data = np.take(amp, data_index)
+        jobs.append({'amp': data, **kwargs, 'ID': i})
 
     #-----------
     # Processing
     #-----------
 
-    # Do NOT use the multiprocessing package
-    if nbcores == -1:
-        results = pd.DataFrame()
-        for i, orig_i in enumerate(ID):
-            a = processor(args[i], **kwargs, ID=orig_i)
-            cb_processor(a)
+    results = []
+    async_cb = cb_processor if verbose else None
+    if verbose:
+        print("#", len(jobs), "jobs")
+
+    if nbcores <= 1:
+        # Do NOT use the multiprocessing package
+        for job in jobs:
+            a = processor(**job)
+            if async_cb:
+                async_cb(a)
             b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            results = results.append(b, ignore_index=True)
-        out = results
+            results.append(b)
+    else:
+        # Do use the multiprocessing package
+        with multiprocessing.Pool(nbcores) as pool:
+            for a in pool.imap(processor_mp_, jobs):
+                if async_cb:
+                    async_cb(a)
+                b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
+                results.append(b)
 
-    # Do use the multiprocessing package
-    if nbcores > 0:
-        results = []
-        if verbose is True:
-            async_inline = Async(processor, cb_processor, nbcores=nbcores)
-        elif verbose is False:
-            async_inline = Async(processor, None, nbcores=nbcores)
+    out = pd.DataFrame(results)
+    #out['xa'] = w['xa']
+    #out['xb'] = w['xb']
+    #out['xo'] = w['xo']
 
-        for i, orig_i in enumerate(ID):
-            results.append( async_inline.call(args[i], **kwargs, ID=orig_i) )
-        async_inline.wait()
-        # Sorting Results
-        out = pd.DataFrame()
-        for i in results:
-            a = i.get()
-            b = {**a.values, **a.power(), 'crl':a.crl(), 'chisqr':a.chisqr,}
-            out = out.append(b, ignore_index=True)
-        out = out.sort_values('ID')
-
-        #out['xa'] = w['xa']
-        #out['xb'] = w['xb']
-        #out['xo'] = w['xo']
-        #out = out.drop('ID', 1)
-
+    if verbose:
         t2 = time.time()
-        if verbose is True:
-            print("- Processed in %.1f s.\n" % (t2-t1))
+        print("- Processed in %.1f s.\n" % (t2-t1))
 
     return out
+
