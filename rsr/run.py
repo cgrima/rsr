@@ -103,7 +103,7 @@ def cb_processor(a):
     return a
 
 
-def frames(x ,winsize=1000., sampling=250, **kwargs):
+def frames(x ,winsize:int=1000, sampling:int=250, **kwargs):
     """
     Defines along-track frames coordinates for rsr application
 
@@ -120,7 +120,7 @@ def frames(x ,winsize=1000., sampling=250, **kwargs):
         Sampling step
     """
     # Window first and last id
-    xa = x[:np.int(x.size-winsize):np.int(sampling)]
+    xa = x[:int(x.size-winsize):int(sampling)]
     xb = xa + winsize-1
 
     # Cut last window in limb
