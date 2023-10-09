@@ -27,7 +27,7 @@ INSTALL_REQUIRES = [
       'pandas>=1.1.4',
       'subradar>=1.0.1',
       'scipy>=1.5.2',
-      'sklearn>=0.0',
+      'scikit-learn>=0.0',
 ]
 
 # Bundle everything above
